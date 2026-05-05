@@ -2,6 +2,7 @@ package com.fibelatti.pinboard.features.export
 
 import android.content.Context
 import com.fibelatti.core.functional.UseCase
+import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.AppModeProvider
 import com.fibelatti.pinboard.core.util.DateFormatter
@@ -93,6 +94,7 @@ class ExportBookmarksUseCase @Inject constructor(
 
     private suspend fun exportBookmarks(file: File, posts: List<Post>) {
         val sw = StringWriter()
+        val title = context.getString(R.string.export_html_title)
 
         sw.appendLine("<!DOCTYPE netscape-bookmark-file-1>")
         sw.appendHTML().html {
@@ -101,11 +103,11 @@ class ExportBookmarksUseCase @Inject constructor(
                     httpEquiv = "Content-Type"
                     content = "text/html; charset=UTF-8"
                 }
-                title("Bookmarks")
+                title(title)
             }
             body {
                 h1 {
-                    text("Bookmarks")
+                    text(title)
                 }
                 dl {
                     p()

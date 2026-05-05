@@ -260,6 +260,7 @@
     <!-- Export -->
     <string name="export_feedback_success">Bookmarks exported successfully!</string>
     <string name="export_feedback_failure">Failed to export bookmarks</string>
+    <string name="export_html_title">Bookmarks</string>
 
     <!-- User Preferences -->
     <string name="user_preferences_title">Preferences</string>

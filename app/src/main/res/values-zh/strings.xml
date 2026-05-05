@@ -253,6 +253,7 @@
     <!-- Export -->
     <string name="export_feedback_success">书签导出成功！</string>
     <string name="export_feedback_failure">导出书签失败</string>
+    <string name="export_html_title">书签</string>
 
     <!-- User Preferences -->
     <string name="user_preferences_title">偏好设置</string>
