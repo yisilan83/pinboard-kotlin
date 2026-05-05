@@ -355,9 +355,15 @@
 
     <!-- Error -->
     <string name="error_send_email">发送邮件</string>
-    <string name="error_report_rationale">看起来出了点问题。\n\n您可以通过邮件报告此错误，这有助于我诊断和修复问题。</string>
+    <string name="error_report_rationale">看起来出了点问题。
+
+您可以通过邮件报告此错误，这有助于我诊断和修复问题。</string>
     <string name="error_report">报告</string>
     <string name="error_ignore">忽略</string>
+    <string name="error_report_email_subject">Pinkt (%s) — 错误报告</string>
+    <string name="error_report_email_android_version">Android 版本：%s（SDK %d）</string>
+    <string name="error_report_email_current_service">当前服务：%s</string>
+    <string name="error_report_email_body_intro">我刚才遇到了此错误：</string>
 
     <!-- Content Descriptions -->
     <string name="cd_navigate_back">返回</string>

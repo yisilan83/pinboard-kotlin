@@ -365,6 +365,10 @@
     <string name="error_report_rationale">Looks like something went wrong.\n\nYou can report this error by email which helps me diagnose and fix issues.</string>
     <string name="error_report">Report</string>
     <string name="error_ignore">Ignore</string>
+    <string name="error_report_email_subject">Pinkt (%s) — Error Report</string>
+    <string name="error_report_email_android_version">Android Version: %s (SDK %d)</string>
+    <string name="error_report_email_current_service">Current Service: %s</string>
+    <string name="error_report_email_body_intro">This error just happened to me:</string>
 
     <!-- Content Descriptions -->
     <string name="cd_navigate_back">Navigate back</string>
