@@ -11,7 +11,6 @@ import com.fibelatti.pinboard.features.linkding.data.BookmarksDao
 import com.fibelatti.pinboard.features.posts.data.PostsDao
 import com.fibelatti.pinboard.features.posts.data.model.PostDtoMapper
 import com.fibelatti.pinboard.features.posts.domain.model.Post
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -37,7 +36,7 @@ import kotlinx.html.title
 import timber.log.Timber
 
 class ExportBookmarksUseCase @Inject constructor(
-    @ApplicationContext context: Context,
+    private val context: Context,
     private val appModeProvider: AppModeProvider,
     private val postDao: PostsDao,
     private val postDtoMapper: PostDtoMapper,
