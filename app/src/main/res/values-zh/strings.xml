@@ -83,7 +83,6 @@
     <string name="posts_title_untagged">未标记书签</string>
 
     <plurals name="posts_quantity">
-        <item quantity="one">1 项</item>
         <item quantity="other">%s 项</item>
     </plurals>
 
@@ -152,7 +151,6 @@
     <string name="search_active">筛选已应用</string>
 
     <plurals name="search_result_size">
-        <item quantity="one">1 个匹配</item>
         <item quantity="other">%d 个匹配</item>
     </plurals>
 
@@ -201,7 +199,6 @@
     <!-- Notes -->
     <string name="notes_title">笔记</string>
     <plurals name="notes_quantity">
-        <item quantity="one">1 条笔记</item>
         <item quantity="other">%d 条笔记</item>
     </plurals>
     <string name="notes_saved_at">保存于 %s</string>
@@ -215,7 +212,6 @@
     <!-- Popular -->
     <string name="popular_title">热门书签</string>
     <plurals name="popular_count">
-        <item quantity="one">被收藏 1 次</item>
         <item quantity="other">被收藏 %d 次</item>
     </plurals>
 
