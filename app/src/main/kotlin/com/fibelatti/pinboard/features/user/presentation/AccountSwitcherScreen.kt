@@ -115,8 +115,8 @@ private fun AccountSwitcherScreen(
         if (AppMode.NO_API in userCredentials.getConnectedServices()) {
             item(key = "review_mode") {
                 AccountItem(
-                    title = "App Review Mode",
-                    description = "Bookmarks are only saved locally and will be deleted on logout.",
+                    title = stringResource(R.string.account_switcher_app_review_mode_title),
+                    description = stringResource(R.string.account_switcher_app_review_mode_description),
                     onSelectClick = onSelectReviewModeClick,
                     onLogoutClick = onLogoutReviewModeClick,
                     modifier = Modifier.animateItem(),

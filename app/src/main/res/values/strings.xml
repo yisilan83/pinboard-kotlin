@@ -256,6 +256,8 @@
     <string name="account_switcher_logout">Logout</string>
     <string name="account_switcher_add_pinboard">Add Pinboard account</string>
     <string name="account_switcher_add_linkding">Add Linkding account</string>
+    <string name="account_switcher_app_review_mode_title">App Review Mode</string>
+    <string name="account_switcher_app_review_mode_description">Bookmarks are only saved locally and will be deleted on logout.</string>
 
     <!-- Export -->
     <string name="export_feedback_success">Bookmarks exported successfully!</string>
