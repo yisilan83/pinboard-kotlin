@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Common -->
-    <string name="pinboard" translatable="false">Pinboard</string>
-    <string name="linkding" translatable="false">Linkding</string>
-
     <string name="hint_ok">确定</string>
     <string name="hint_yes">是</string>
     <string name="hint_no">否</string>
