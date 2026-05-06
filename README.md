@@ -1,9 +1,9 @@
 Pinkt
 =====
 
-[![Language](https://img.shields.io/badge/language-kotlin-brightgreen.svg)](https://www.github.com/fibelatti/pinboard-kotlin)
+[![Language](https://img.shields.io/badge/language-kotlin-brightgreen.svg)](https://www.github.com/yisilan83/pinboard-kotlin)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Android CI](https://github.com/fibelatti/pinboard-kotlin/actions/workflows/android-ci.yml/badge.svg?branch=main)](https://github.com/fibelatti/pinboard-kotlin/actions?query=workflow%3A%22Android+CI%22+branch%3Amain)
+[![Android CI](https://github.com/yisilan83/pinboard-kotlin/actions/workflows/android-ci.yml/badge.svg?branch=main)](https://github.com/yisilan83/pinboard-kotlin/actions?query=workflow%3A%22Android+CI%22+branch%3Amain)
 
 Pinkt is an unofficial, [FOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software) Android client
 for [Pinboard](http://pinboard.in/) and [Linkding](https://github.com/sissbruecker/linkding).
@@ -11,24 +11,7 @@ for [Pinboard](http://pinboard.in/) and [Linkding](https://github.com/sissbrueck
 * Pinboard is a fast, no-nonsense bookmarking site for people who value privacy and speed.
 * Linkding is a self-hosted bookmark manager that is designed be to be minimal, fast, and easy to set up using Docker.
 
-Downloads
---------
-
-<a href='https://play.google.com/store/apps/details?id=com.fibelatti.pinboard'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' width='150' /></a>
-<a href='https://apt.izzysoft.de/fdroid/index/apk/com.fibelatti.pinboard'><img alt='Get it on IzzyOnDroid' src='https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png' width='150' /></a>
-<a href="https://github.com/fibelatti/pinboard-kotlin/releases/latest"><img alt="Get it on GitHub" src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" width="150"></a>
-
-> [!Note]
->
-> Downloads from Google Play are verified by Google Play Protect.
->
-> Downloads from IzzyOnDroid are verified
-> by [Reproducible Builds](https://android.izzysoft.de/articles/named/iod-rbs-mirrors-clients?lang=en).
->
-> Downloads from GitHub can be verified with third-party tools such
-> as [AppVerifier](https://github.com/soupslurpr/AppVerifier) using the following SHA-256 digest:
->
-> 9E:B9:92:5B:95:8F:C0:C4:EB:FB:99:FD:C5:1E:85:56:02:D0:42:E2:30:AF:91:71:6E:EC:B6:58:AE:04:19:89
+> **本项目是 [fibelatti/pinboard-kotlin](https://github.com/fibelatti/pinboard-kotlin) 的 Fork，添加了完整的中文语言支持，并自动同步上游更新。**
 
 Features
 --------
@@ -48,11 +31,19 @@ Save links from your favorite websites and apps quickly by sharing them to Pinkt
 - Dynamic color support
 - Portrait and Landscape support
 - Optimized for tablets and chromebooks
+- **中文界面支持 (Chinese language support)** 🇨🇳
 
 Pinboard-only features:
 
 - View your saved notes without leaving the app
 - Popular bookmarks: see what's trending and save them to your collection
+
+Downloads
+--------
+
+> 本 Fork 提供带中文语言支持的 Release APK，使用固定签名构建。
+
+<a href="https://github.com/yisilan83/pinboard-kotlin/releases/latest"><img alt="Get it on GitHub" src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" width="150"></a>
 
 About the project
 --------
