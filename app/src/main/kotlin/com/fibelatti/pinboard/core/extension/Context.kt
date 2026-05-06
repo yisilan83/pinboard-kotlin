@@ -50,8 +50,19 @@ fun Context.showErrorReportDialog(
             throwable.printStackTrace(PrintWriter(sw))
 
             val emailBody = StringBuilder().apply {
-                appendLine(getString(R.string.error_report_email_android_version, Build.VERSION.RELEASE, Build.VERSION.SDK_INT))
-                appendLine(getString(R.string.error_report_email_current_service, appModeProvider.appMode.value))
+                appendLine(
+                    getString(
+                        R.string.error_report_email_android_version,
+                        Build.VERSION.RELEASE,
+                        Build.VERSION.SDK_INT,
+                    ),
+                )
+                appendLine(
+                    getString(
+                        R.string.error_report_email_current_service,
+                        appModeProvider.appMode.value,
+                    ),
+                )
                 appendLine("---")
                 appendLine(getString(R.string.error_report_email_body_intro))
                 appendLine()
@@ -60,7 +71,10 @@ fun Context.showErrorReportDialog(
 
             val emailIntent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).apply {
                 putExtra(Intent.EXTRA_EMAIL, arrayOf("appsupport@fibelatti.com"))
-                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.error_report_email_subject, BuildConfig.VERSION_NAME))
+                putExtra(
+                    Intent.EXTRA_SUBJECT,
+                    getString(R.string.error_report_email_subject, BuildConfig.VERSION_NAME),
+                )
                 putExtra(Intent.EXTRA_TEXT, emailBody.toString())
             }
             startActivity(Intent.createChooser(emailIntent, getString(R.string.error_send_email)))
