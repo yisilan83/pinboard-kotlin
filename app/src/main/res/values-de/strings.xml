@@ -253,10 +253,13 @@
     <string name="account_switcher_logout">Abmelden</string>
     <string name="account_switcher_add_pinboard">Pinboard-Konto hinzufügen</string>
     <string name="account_switcher_add_linkding">Linkding-Konto hinzufügen</string>
+    <string name="account_switcher_app_review_mode_title">App Review Mode</string>
+    <string name="account_switcher_app_review_mode_description">Bookmarks are only saved locally and will be deleted on logout.</string>
 
     <!-- Export -->
     <string name="export_feedback_success">Lesezeichen erfolgreich exportiert!</string>
     <string name="export_feedback_failure">Lesezeichen konnten nicht exportiert werden</string>
+    <string name="export_html_title">Bookmarks</string>
 
     <!-- User Preferences -->
     <string name="user_preferences_title">Einstellungen</string>
@@ -362,6 +365,10 @@
     <string name="error_report_rationale">Es scheint, dass etwas schief gelaufen ist.\n\nSie können diesen Fehler per E-Mail melden, was mir hilft, Probleme zu diagnostizieren und zu beheben.</string>
     <string name="error_report">Melden</string>
     <string name="error_ignore">Ignorieren</string>
+    <string name="error_report_email_subject">Pinkt (%s) — Error Report</string>
+    <string name="error_report_email_android_version" formatted="false">Android Version: %s (SDK %d)</string>
+    <string name="error_report_email_current_service">Current Service: %s</string>
+    <string name="error_report_email_body_intro">This error just happened to me:</string>
 
     <!-- Content Descriptions -->
     <string name="cd_navigate_back">Zurück navigieren</string>

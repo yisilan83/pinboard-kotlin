@@ -257,10 +257,13 @@
     <string name="account_switcher_logout">Cerrar sesión</string>
     <string name="account_switcher_add_pinboard">Agregar cuenta de Pinboard</string>
     <string name="account_switcher_add_linkding">Agregar cuenta de Linkding</string>
+    <string name="account_switcher_app_review_mode_title">App Review Mode</string>
+    <string name="account_switcher_app_review_mode_description">Bookmarks are only saved locally and will be deleted on logout.</string>
 
     <!-- Export -->
     <string name="export_feedback_success">¡Marcadores exportados correctamente!</string>
     <string name="export_feedback_failure">Error al exportar marcadores</string>
+    <string name="export_html_title">Bookmarks</string>
 
     <!-- User Preferences -->
     <string name="user_preferences_title">Preferencias</string>
@@ -366,6 +369,10 @@
     <string name="error_report_rationale">Parece que algo salió mal.\n\nPuedes reportar este error por correo electrónico, lo que me ayuda a diagnosticar y solucionar problemas.</string>
     <string name="error_report">Reportar</string>
     <string name="error_ignore">Ignorar</string>
+    <string name="error_report_email_subject">Pinkt (%s) — Error Report</string>
+    <string name="error_report_email_android_version" formatted="false">Android Version: %s (SDK %d)</string>
+    <string name="error_report_email_current_service">Current Service: %s</string>
+    <string name="error_report_email_body_intro">This error just happened to me:</string>
 
     <!-- Content Descriptions -->
     <string name="cd_navigate_back">Navegar atrás</string>
