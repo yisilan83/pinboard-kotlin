@@ -281,3 +281,13 @@ val printReleaseVersionCode by tasks.registering {
         println(AppInfo.versionCode)
     }
 }
+
+/**
+ * Prints the current version name. Used for GitHub releases.
+ */
+@Suppress("unused")
+val printReleaseVersionName by tasks.registering {
+    doLast {
+        println(AppInfo.versionName)
+    }
+}
