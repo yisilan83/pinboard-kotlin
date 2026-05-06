@@ -1,4 +1,4 @@
-name: Sync Upstream
+name: Sync Upstream & Build
 
 on:
   schedule:
@@ -28,41 +28,58 @@ jobs:
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/fibelatti/pinboard-kotlin.git
-          git fetch upstream
+          git fetch upstream --tags
 
-      - name: Check for upstream releases
+      - name: Check for new upstream tags
         id: check_release
         run: |
-          LATEST_TAG=$(git ls-remote --tags --refs upstream 'refs/tags/v*' | sort -t/ -k3 -V | tail -1 | awk '{print $2}' | sed 's|refs/tags/||')
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v?[0-9]' | head -1 || echo "none")
+          UPSTREAM_LATEST_TAG=$(git ls-remote --tags --refs upstream 'refs/tags/*' | sort -t/ -k3 -V | tail -1 | awk '{print $2}' | sed 's|refs/tags/||')
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          echo "Latest upstream tag: $LATEST_TAG"
+          echo "upstream_tag=$UPSTREAM_LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Current latest: $LATEST_TAG, Upstream latest: $UPSTREAM_LATEST_TAG"
 
       - name: Merge upstream main
         run: |
-          git checkout main
-          git merge upstream/main --allow-unrelated-histories || true
+          git merge upstream/main --allow-unrelated-histories -m "Sync: merge upstream/main" || true
 
       - name: Push changes
         run: |
           git push origin main
 
-      - name: Create PR for upstream release
-        if: steps.check_release.outputs.latest_tag != ''
+      - name: Create tag for upstream release
+        if: steps.check_release.outputs.upstream_tag != '' && steps.check_release.outputs.upstream_tag != steps.check_release.outputs.latest_tag
         run: |
-          BRANCH_NAME="upstream-release-${{ steps.check_release.outputs.latest_tag }}"
-          git checkout -b "$BRANCH_NAME"
-          git merge upstream/main --allow-unrelated-histories || true
-          git push origin "$BRANCH_NAME"
+          git tag "${{ steps.check_release.outputs.upstream_tag }}"
+          git push origin "${{ steps.check_release.outputs.upstream_tag }}"
 
-          gh pr create \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Sync: Upstream release ${{ steps.check_release.outputs.latest_tag }}" \
-            --body "This PR syncs changes from upstream release ${{ steps.check_release.outputs.latest_tag }}.
+  build-signed-apk:
+    name: Build Signed APK
+    needs: sync
+    runs-on: ubuntu-latest
+    if: always() && needs.sync.result != 'failure'
+    steps:
+      - name: Project Checkout
+        uses: actions/checkout@v6
 
-            - Upstream: https://github.com/fibelatti/pinboard-kotlin/releases/tag/${{ steps.check_release.outputs.latest_tag }}
+      - name: Setup Android Build
+        uses: ./.github/actions/setup-android-build
 
-            Auto-created by the sync-upstream workflow." \
-            --repo ${{ github.repository }}
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE }}" | base64 -d > ${{ github.workspace }}/keystore/release.jks
+
+      - name: Build
+        run: ./gradlew app:assembleRelease
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN_BUILD: true
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: signed-apk
+          path: app/build/outputs/apk/release/*.apk
