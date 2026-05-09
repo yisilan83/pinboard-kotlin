@@ -57,10 +57,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -79,6 +79,9 @@ import com.fibelatti.pinboard.core.android.composable.SelectionDialogBottomSheet
 import com.fibelatti.pinboard.core.android.composable.SelectionDialogCustomizationBottomSheet
 import com.fibelatti.pinboard.core.android.composable.SettingToggle
 import com.fibelatti.pinboard.core.android.composable.SwitchWithIcon
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Close
+import com.fibelatti.pinboard.core.android.icons.Edit
 import com.fibelatti.pinboard.core.extension.fillWidthOfParent
 import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.notifications.isNotificationPermissionGranted
@@ -264,7 +267,7 @@ private fun AppPreferencesContent(
                         Appearance.SystemDefault,
                     )
                 },
-                onOptionSelected = onAppearanceChange,
+                onOptionSelect = onAppearanceChange,
             )
         }
 
@@ -322,7 +325,7 @@ private fun AppPreferencesContent(
                         PreferredDateFormat.NoDate,
                     )
                 },
-                onOptionSelected = { newSelection ->
+                onOptionSelect = { newSelection ->
                     onDateFormatChange(newSelection, userPreferences.preferredDateFormat.includeTime)
                 },
                 footer = {
@@ -378,7 +381,7 @@ private fun AppPreferencesContent(
                             PeriodicSync.Every24Hours,
                         )
                     },
-                    onOptionSelected = onPeriodicSyncChange,
+                    onOptionSelect = onPeriodicSyncChange,
                 )
 
                 Text(
@@ -467,7 +470,7 @@ private fun AppPreferencesContent(
                         PreferredDetailsView.Edit,
                     )
                 },
-                onOptionSelected = onPreferredViewChange,
+                onOptionSelect = onPreferredViewChange,
             )
 
             Text(
@@ -577,13 +580,13 @@ private fun BookmarkingPreferencesContent(
 
             TagManager(
                 searchTagInput = tagState.currentQuery,
-                onSearchTagInputChanged = userPreferencesViewModel::setTagSearchQuery,
-                onAddTagClicked = userPreferencesViewModel::addTag,
+                onSearchTagInputChange = userPreferencesViewModel::setTagSearchQuery,
+                onAddTagClick = userPreferencesViewModel::addTag,
                 suggestedTags = tagState.suggestedTags,
-                onSuggestedTagClicked = userPreferencesViewModel::addTag,
+                onSuggestedTagClick = userPreferencesViewModel::addTag,
                 currentTagsTitle = stringResource(id = tagState.displayTitle),
                 currentTags = tagState.tags,
-                onRemoveCurrentTagClicked = userPreferencesViewModel::removeTag,
+                onRemoveCurrentTagClick = userPreferencesViewModel::removeTag,
                 modifier = Modifier.fillWidthOfParent(parentPaddingStart = 8.dp, parentPaddingEnd = 8.dp),
                 horizontalPadding = 8.dp,
             )
@@ -637,7 +640,7 @@ private fun BookmarkingPreferencesContent(
                         EditAfterSharing.AfterSaving,
                     )
                 },
-                onOptionSelected = onEditAfterSharingChange,
+                onOptionSelect = onEditAfterSharingChange,
             )
 
             Text(
@@ -780,7 +783,7 @@ private fun RemoveUrlParametersSetting(
                 }
             }
 
-            val closeIcon = painterResource(id = R.drawable.ic_close)
+            val closeIcon = rememberVectorPainter(AppIcons.Close)
             SingleLineChipGroup(
                 items = remember(removedParameters) {
                     removedParameters.map { parameter -> ChipGroup.Item(text = parameter, icon = closeIcon) }
@@ -846,7 +849,7 @@ private fun PreferenceButton(
         Spacer(modifier = Modifier.size(4.dp))
 
         Icon(
-            painter = painterResource(id = R.drawable.ic_edit),
+            imageVector = AppIcons.Edit,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
         )
@@ -859,7 +862,7 @@ private fun <T> PreferenceSelectionButton(
     buttonText: (T) -> Int,
     @StringRes title: Int,
     options: () -> List<T>,
-    onOptionSelected: (T) -> Unit,
+    onOptionSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     footer: @Composable () -> Unit = {},
 ) {
@@ -877,7 +880,7 @@ private fun <T> PreferenceSelectionButton(
         title = stringResource(title),
         options = options(),
         optionName = { option -> localResources.getString(buttonText(option)) },
-        onOptionSelected = onOptionSelected,
+        onOptionSelect = onOptionSelect,
         footer = footer,
     )
 }

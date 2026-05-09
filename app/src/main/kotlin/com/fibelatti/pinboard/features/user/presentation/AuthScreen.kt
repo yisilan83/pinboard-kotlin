@@ -58,8 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -69,9 +69,15 @@ import androidx.core.text.HtmlCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fibelatti.pinboard.R
-import com.fibelatti.pinboard.core.android.composable.LaunchedErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.core.android.composable.LocalAppCompatActivity
 import com.fibelatti.pinboard.core.android.composable.LongClickIconButton
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Delete
+import com.fibelatti.pinboard.core.android.icons.Eye
+import com.fibelatti.pinboard.core.android.icons.EyeSlash
+import com.fibelatti.pinboard.core.android.icons.Help
+import com.fibelatti.pinboard.core.android.icons.Pin
 import com.fibelatti.ui.components.TextWithLinks
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
@@ -83,14 +89,14 @@ fun AuthScreen(
     val screenState: AuthViewModel.ScreenState by authViewModel.screenState.collectAsStateWithLifecycle()
 
     val error: Throwable? by authViewModel.error.collectAsStateWithLifecycle()
-    LaunchedErrorHandlerEffect(error = error, handler = authViewModel::errorHandled)
+    ErrorHandlerEffect(error = error, handler = authViewModel::errorHandled)
 
     val activity: AppCompatActivity = LocalAppCompatActivity.current
 
     AuthScreen(
         allowSwitching = screenState.allowSwitching,
         useLinkding = screenState.useLinkding,
-        onUseLinkdingChanged = authViewModel::useLinkding,
+        onUseLinkdingChange = authViewModel::useLinkding,
         clientCertAlias = screenState.clientCertAlias,
         onClientCertAliasClick = {
             activity.launchClientCertPicker(
@@ -98,8 +104,8 @@ fun AuthScreen(
                 onAliasSelected = authViewModel::setClientCertAlias,
             )
         },
-        onClientCertAliasChanged = authViewModel::setClientCertAlias,
-        onAuthRequested = authViewModel::login,
+        onClientCertAliasChange = authViewModel::setClientCertAlias,
+        onAuthRequest = authViewModel::login,
         isLoading = screenState.isLoading,
         apiTokenError = screenState.apiTokenError,
         instanceUrlError = screenState.instanceUrlError,
@@ -110,11 +116,11 @@ fun AuthScreen(
 private fun AuthScreen(
     allowSwitching: Boolean,
     useLinkding: Boolean,
-    onUseLinkdingChanged: (Boolean) -> Unit,
+    onUseLinkdingChange: (Boolean) -> Unit,
     clientCertAlias: String?,
     onClientCertAliasClick: () -> Unit,
-    onClientCertAliasChanged: (String?) -> Unit,
-    onAuthRequested: (token: String, instanceUrl: String) -> Unit,
+    onClientCertAliasChange: (String?) -> Unit,
+    onAuthRequest: (token: String, instanceUrl: String) -> Unit,
     isLoading: Boolean,
     apiTokenError: String?,
     instanceUrlError: String?,
@@ -138,7 +144,7 @@ private fun AuthScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_pin),
+            imageVector = AppIcons.Pin,
             contentDescription = null,
             modifier = Modifier
                 .padding(top = if (allowSwitching) 40.dp else 0.dp, bottom = 20.dp)
@@ -225,9 +231,7 @@ private fun AuthScreen(
                                 label = "AuthTokenIconVisibility",
                             ) { visible ->
                                 Icon(
-                                    painter = painterResource(
-                                        id = if (visible) R.drawable.ic_eye else R.drawable.ic_eye_slash,
-                                    ),
+                                    imageVector = if (visible) AppIcons.Eye else AppIcons.EyeSlash,
                                     contentDescription = null,
                                     modifier = Modifier.size(30.dp),
                                 )
@@ -240,7 +244,7 @@ private fun AuthScreen(
                         keyboardType = KeyboardType.Password,
                     ),
                     onKeyboardAction = KeyboardActionHandler {
-                        onAuthRequested(
+                        onAuthRequest(
                             authTokenFieldState.text.toString(),
                             instanceUrlFieldState.text.toString(),
                         )
@@ -265,7 +269,7 @@ private fun AuthScreen(
                     ClientCertPicker(
                         onClientCertAliasClick = onClientCertAliasClick,
                         clientCertAlias = clientCertAlias,
-                        onClientCertAliasChanged = onClientCertAliasChanged,
+                        onClientCertAliasChange = onClientCertAliasChange,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
@@ -285,7 +289,7 @@ private fun AuthScreen(
                     } else {
                         Button(
                             onClick = {
-                                onAuthRequested(
+                                onAuthRequest(
                                     authTokenFieldState.text.toString(),
                                     instanceUrlFieldState.text.toString(),
                                 )
@@ -299,7 +303,7 @@ private fun AuthScreen(
 
                 if (allowSwitching) {
                     TextButton(
-                        onClick = { onUseLinkdingChanged(!useLinkding) },
+                        onClick = { onUseLinkdingChange(!useLinkding) },
                         shapes = ExtendedTheme.defaultButtonShapes,
                         modifier = Modifier
                             .padding(top = 8.dp)
@@ -329,7 +333,7 @@ private fun AuthScreen(
 fun ClientCertPicker(
     onClientCertAliasClick: () -> Unit,
     clientCertAlias: String?,
-    onClientCertAliasChanged: (String?) -> Unit,
+    onClientCertAliasChange: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -352,11 +356,11 @@ fun ClientCertPicker(
 
         if (clientCertAlias != null) {
             IconButton(
-                onClick = { onClientCertAliasChanged(null) },
+                onClick = { onClientCertAliasChange(null) },
                 shapes = IconButtonDefaults.shapes(),
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_delete),
+                    imageVector = AppIcons.Delete,
                     contentDescription = stringResource(
                         id = R.string.auth_linkding_client_certificate_clear,
                     ),
@@ -421,7 +425,7 @@ private fun AuthTokenHelp(
             )
         } else {
             LongClickIconButton(
-                painter = painterResource(id = R.drawable.ic_help),
+                painter = rememberVectorPainter(AppIcons.Help),
                 description = stringResource(id = R.string.hint_help),
                 onClick = { helpVisible = true },
                 iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -438,11 +442,11 @@ private fun AuthScreenPreview() {
         AuthScreen(
             useLinkding = false,
             allowSwitching = true,
-            onUseLinkdingChanged = {},
+            onUseLinkdingChange = {},
             clientCertAlias = null,
             onClientCertAliasClick = {},
-            onClientCertAliasChanged = {},
-            onAuthRequested = { _, _ -> },
+            onClientCertAliasChange = {},
+            onAuthRequest = { _, _ -> },
             isLoading = false,
             apiTokenError = null,
             instanceUrlError = null,
@@ -457,11 +461,11 @@ private fun AuthScreenLinkdingPreview() {
         AuthScreen(
             useLinkding = true,
             allowSwitching = true,
-            onUseLinkdingChanged = {},
+            onUseLinkdingChange = {},
             clientCertAlias = null,
             onClientCertAliasClick = {},
-            onClientCertAliasChanged = {},
-            onAuthRequested = { _, _ -> },
+            onClientCertAliasChange = {},
+            onAuthRequest = { _, _ -> },
             isLoading = false,
             apiTokenError = null,
             instanceUrlError = null,
@@ -476,11 +480,11 @@ private fun AuthScreenLoadingPreview() {
         AuthScreen(
             useLinkding = false,
             allowSwitching = true,
-            onUseLinkdingChanged = {},
+            onUseLinkdingChange = {},
             clientCertAlias = null,
             onClientCertAliasClick = {},
-            onClientCertAliasChanged = {},
-            onAuthRequested = { _, _ -> },
+            onClientCertAliasChange = {},
+            onAuthRequest = { _, _ -> },
             isLoading = true,
             apiTokenError = null,
             instanceUrlError = null,
@@ -495,11 +499,11 @@ private fun AuthScreenErrorPreview() {
         AuthScreen(
             useLinkding = false,
             allowSwitching = true,
-            onUseLinkdingChanged = {},
+            onUseLinkdingChange = {},
             clientCertAlias = null,
             onClientCertAliasClick = {},
-            onClientCertAliasChanged = {},
-            onAuthRequested = { _, _ -> },
+            onClientCertAliasChange = {},
+            onAuthRequest = { _, _ -> },
             isLoading = false,
             apiTokenError = "Some error happened. Please try again.",
             instanceUrlError = null,

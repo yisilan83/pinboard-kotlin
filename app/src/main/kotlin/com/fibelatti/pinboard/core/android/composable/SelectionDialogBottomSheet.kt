@@ -30,9 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,9 +50,9 @@ fun <T> SelectionDialogBottomSheet(
     title: String,
     options: List<T>,
     optionName: (T) -> String,
-    onOptionSelected: (T) -> Unit,
+    onOptionSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
-    optionIcon: (T) -> Int? = { null },
+    optionIcon: (T) -> ImageVector? = { null },
     footer: @Composable () -> Unit = {},
 ) {
     SelectionDialogBottomSheet(
@@ -60,7 +60,7 @@ fun <T> SelectionDialogBottomSheet(
         title = title,
         options = options.associateWith { false },
         optionName = optionName,
-        onOptionSelected = onOptionSelected,
+        onOptionSelect = onOptionSelect,
         modifier = modifier,
         optionIcon = optionIcon,
         footer = footer,
@@ -73,9 +73,9 @@ fun <T> SelectionDialogBottomSheet(
     title: String,
     options: Map<T, Boolean>,
     optionName: (T) -> String,
-    onOptionSelected: (T) -> Unit,
+    onOptionSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
-    optionIcon: (T) -> Int? = { null },
+    optionIcon: (T) -> ImageVector? = { null },
     footer: @Composable () -> Unit = {},
 ) {
     AppBottomSheet(
@@ -87,8 +87,8 @@ fun <T> SelectionDialogBottomSheet(
             options = options,
             optionName = optionName,
             optionIcon = optionIcon,
-            onOptionSelected = { option ->
-                sheetState.hideBottomSheet { onOptionSelected(option) }
+            onOptionSelect = { option ->
+                sheetState.hideBottomSheet { onOptionSelect(option) }
             },
             footer = footer,
         )
@@ -103,7 +103,7 @@ fun <T> SelectionDialogCustomizationBottomSheet(
     optionName: (T) -> String,
     onConfirm: (Map<T, Boolean>) -> Unit,
     modifier: Modifier = Modifier,
-    optionIcon: (T) -> Int? = { null },
+    optionIcon: (T) -> ImageVector? = { null },
 ) {
     AppBottomSheet(
         sheetState = sheetState,
@@ -126,8 +126,8 @@ private fun <T> SelectionDialogContent(
     title: String,
     options: Map<T, Boolean>,
     optionName: (T) -> String,
-    optionIcon: (T) -> Int?,
-    onOptionSelected: (T) -> Unit,
+    optionIcon: (T) -> ImageVector?,
+    onOptionSelect: (T) -> Unit,
     footer: @Composable () -> Unit = {},
 ) {
     val visibleOptions = remember(options) { options.filterValues { hidden -> !hidden }.keys.toList() }
@@ -160,7 +160,7 @@ private fun <T> SelectionDialogContent(
                 option = option,
                 optionName = optionName,
                 optionIcon = optionIcon,
-                onClick = onOptionSelected,
+                onClick = onOptionSelect,
             )
         }
 
@@ -183,7 +183,7 @@ private fun <T> SelectionDialogContent(
                         option = option,
                         optionName = optionName,
                         optionIcon = optionIcon,
-                        onClick = onOptionSelected,
+                        onClick = onOptionSelect,
                         modifier = Modifier.animateItem(
                             fadeInSpec = tween(delayMillis = 75 * index, easing = FastOutLinearInEasing),
                         ),
@@ -203,7 +203,7 @@ private fun <T> SelectionDialogCustomizationContent(
     title: String,
     options: Map<T, Boolean>,
     optionName: (T) -> String,
-    optionIcon: (T) -> Int?,
+    optionIcon: (T) -> ImageVector?,
     onConfirm: (Map<T, Boolean>) -> Unit,
 ) {
     var currentSelection by remember { mutableStateOf(options) }
@@ -320,7 +320,7 @@ private fun <T> SelectionDialogCustomizationContent(
 private fun <T> SelectionItem(
     option: T,
     optionName: (T) -> String,
-    optionIcon: (T) -> Int?,
+    optionIcon: (T) -> ImageVector?,
     onClick: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -335,9 +335,9 @@ private fun <T> SelectionItem(
             textAlign = TextAlign.Center,
         )
 
-        optionIcon(option)?.let {
+        optionIcon(option)?.let { icon ->
             Icon(
-                painter = painterResource(id = it),
+                imageVector = icon,
                 contentDescription = "",
                 modifier = Modifier.size(16.dp),
             )
@@ -356,7 +356,7 @@ private fun SelectionDialogContentPreview() {
             options = listOf("Option 1", "Option 2", "Option 3").associateWith { false },
             optionName = { it },
             optionIcon = { null },
-            onOptionSelected = {},
+            onOptionSelect = {},
         )
     }
 }
@@ -372,7 +372,7 @@ private fun SelectionDialogContentHiddenOptionsPreview() {
                 .plus(listOf("Option 4", "Option 5", "Option 6", "Option 7").associateWith { true }),
             optionName = { it },
             optionIcon = { null },
-            onOptionSelected = {},
+            onOptionSelect = {},
         )
     }
 }

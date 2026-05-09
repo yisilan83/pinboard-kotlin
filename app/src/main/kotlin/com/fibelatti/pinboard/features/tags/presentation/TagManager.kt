@@ -18,9 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -33,21 +33,23 @@ import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import com.fibelatti.ui.components.ChipGroup
 import com.fibelatti.ui.components.MultilineChipGroup
 import com.fibelatti.ui.components.SingleLineChipGroup
+import com.fibelatti.ui.icons.Close
+import com.fibelatti.ui.icons.UiIcons
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 
 @Composable
 fun TagManager(
     searchTagInput: String,
-    onSearchTagInputChanged: (String) -> Unit,
-    onAddTagClicked: (String) -> Unit,
+    onSearchTagInputChange: (String) -> Unit,
+    onAddTagClick: (String) -> Unit,
     suggestedTags: List<String>,
-    onSuggestedTagClicked: (String) -> Unit,
+    onSuggestedTagClick: (String) -> Unit,
     currentTagsTitle: String,
     currentTags: List<Tag>,
-    onRemoveCurrentTagClicked: (Tag) -> Unit,
+    onRemoveCurrentTagClick: (Tag) -> Unit,
     modifier: Modifier = Modifier,
-    onSearchTagInputFocusChanged: (hasFocus: Boolean) -> Unit = {},
+    onSearchTagInputFocusChange: (hasFocus: Boolean) -> Unit = {},
     horizontalPadding: Dp = 16.dp,
 ) {
     ConstraintLayout(
@@ -59,7 +61,7 @@ fun TagManager(
         val keyboardAction = {
             when (val text = searchTagInput.trim()) {
                 "" -> keyboardController?.hide()
-                else -> onAddTagClicked(text)
+                else -> onAddTagClick(text)
             }
         }
 
@@ -76,11 +78,11 @@ fun TagManager(
             onValueChange = { newValue ->
                 when {
                     // Handle keyboards that add a space after punctuation, . is used for private tags
-                    newValue == ". " -> onSearchTagInputChanged(".")
+                    newValue == ". " -> onSearchTagInputChange(".")
 
-                    newValue.isNotBlank() && newValue.endsWith(" ") -> onAddTagClicked(newValue)
+                    newValue.isNotBlank() && newValue.endsWith(" ") -> onAddTagClick(newValue)
 
-                    else -> onSearchTagInputChanged(newValue)
+                    else -> onSearchTagInputChange(newValue)
                 }
             },
             modifier = Modifier
@@ -97,7 +99,7 @@ fun TagManager(
                     }
                     false
                 }
-                .onFocusChanged { onSearchTagInputFocusChanged(it.hasFocus) },
+                .onFocusChanged { onSearchTagInputFocusChange(it.hasFocus) },
             textStyle = MaterialTheme.typography.bodyMedium,
             label = { Text(text = stringResource(id = R.string.posts_add_tags)) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
@@ -109,7 +111,7 @@ fun TagManager(
         FilledTonalButton(
             onClick = {
                 if (searchTagInput.isNotBlank()) {
-                    onAddTagClicked(searchTagInput)
+                    onAddTagClick(searchTagInput)
                 }
             },
             shapes = ExtendedTheme.defaultButtonShapes,
@@ -129,7 +131,7 @@ fun TagManager(
                 items = remember(suggestedTags) {
                     suggestedTags.map { tag -> ChipGroup.Item(text = tag) }
                 },
-                onItemClick = { item -> onSuggestedTagClicked(suggestedTags.first { it == item.text }) },
+                onItemClick = { item -> onSuggestedTagClick(suggestedTags.first { it == item.text }) },
                 modifier = Modifier
                     .constrainAs(clSuggestedTags) {
                         start.linkTo(parent.start)
@@ -170,7 +172,7 @@ fun TagManager(
             color = MaterialTheme.colorScheme.primary,
         )
 
-        val closeIcon = painterResource(id = R.drawable.ic_close)
+        val closeIcon = rememberVectorPainter(UiIcons.Close)
 
         MultilineChipGroup(
             items = remember(currentTags) {
@@ -183,7 +185,7 @@ fun TagManager(
                 end.linkTo(parent.end, margin = horizontalPadding)
                 width = Dimension.fillToConstraints
             },
-            onItemIconClick = { item -> onRemoveCurrentTagClicked(currentTags.first { it.name == item.text }) },
+            onItemIconClick = { item -> onRemoveCurrentTagClick(currentTags.first { it.name == item.text }) },
             itemTextStyle = MaterialTheme.typography.bodySmall.copy(
                 fontFamily = FontFamily.Monospace,
             ),
@@ -197,13 +199,13 @@ private fun TagManagerPreview() {
     ExtendedTheme {
         TagManager(
             searchTagInput = "",
-            onSearchTagInputChanged = {},
-            onAddTagClicked = {},
+            onSearchTagInputChange = {},
+            onAddTagClick = {},
             suggestedTags = listOf("Android", "Dev"),
-            onSuggestedTagClicked = {},
+            onSuggestedTagClick = {},
             currentTagsTitle = stringResource(id = R.string.tags_added_title),
             currentTags = listOf(Tag(name = "Kotlin"), Tag(name = "Compose")),
-            onRemoveCurrentTagClicked = {},
+            onRemoveCurrentTagClick = {},
         )
     }
 }

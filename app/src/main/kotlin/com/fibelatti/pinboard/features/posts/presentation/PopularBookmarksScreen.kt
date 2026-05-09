@@ -17,13 +17,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,9 +34,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.CrossfadeLoadingLayout
 import com.fibelatti.pinboard.core.android.composable.EmptyListContent
-import com.fibelatti.pinboard.core.android.composable.LaunchedErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.core.android.composable.PullRefreshLayout
-import com.fibelatti.pinboard.core.android.composable.RememberedEffect
 import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.PopularPostsContent
 import com.fibelatti.pinboard.features.appstate.RefreshPopular
@@ -66,7 +65,7 @@ fun PopularBookmarksScreen(
 
         val localView = LocalView.current
 
-        RememberedEffect(screenState.savedMessage) {
+        SideEffect(screenState.savedMessage) {
             screenState.savedMessage?.let { messageRes ->
                 localView.showBanner(messageRes)
                 popularPostsViewModel.userNotified()
@@ -74,7 +73,7 @@ fun PopularBookmarksScreen(
         }
 
         val error by popularPostsViewModel.error.collectAsStateWithLifecycle()
-        LaunchedErrorHandlerEffect(error = error, handler = popularPostsViewModel::errorHandled)
+        ErrorHandlerEffect(error = error, handler = popularPostsViewModel::errorHandled)
 
         val popularBookmarkQuickActionsSheetState = rememberAppSheetState()
 
@@ -85,8 +84,8 @@ fun PopularBookmarksScreen(
             PopularBookmarksContent(
                 posts = posts,
                 onPullToRefresh = { popularPostsViewModel.runAction(RefreshPopular) },
-                onBookmarkClicked = { popularPostsViewModel.runAction(ViewPost(it)) },
-                onBookmarkLongClicked = { post ->
+                onBookmarkClick = { popularPostsViewModel.runAction(ViewPost(it)) },
+                onBookmarkLongClick = { post ->
                     popularBookmarkQuickActionsSheetState.showBottomSheet(data = post)
                 },
                 sidePanelVisible = appState.sidePanelVisible,
@@ -104,13 +103,12 @@ fun PopularBookmarksScreen(
 fun PopularBookmarksContent(
     posts: Map<Post, Int>,
     onPullToRefresh: () -> Unit = {},
-    onBookmarkClicked: (Post) -> Unit = {},
-    onBookmarkLongClicked: (Post) -> Unit = {},
+    onBookmarkClick: (Post) -> Unit = {},
+    onBookmarkLongClick: (Post) -> Unit = {},
     sidePanelVisible: Boolean = false,
 ) {
     if (posts.isEmpty()) {
         EmptyListContent(
-            icon = painterResource(id = R.drawable.ic_pin),
             title = stringResource(id = R.string.posts_empty_title),
             description = stringResource(id = R.string.posts_empty_description),
         )
@@ -127,8 +125,8 @@ fun PopularBookmarksContent(
                 PopularBookmarkItem(
                     post = bookmark,
                     count = posts.getOrDefault(bookmark, defaultValue = 1),
-                    onPostClicked = onBookmarkClicked,
-                    onPostLongClicked = onBookmarkLongClicked,
+                    onPostClick = onBookmarkClick,
+                    onPostLongClick = onBookmarkLongClick,
                 )
             }
         }
@@ -139,8 +137,8 @@ fun PopularBookmarksContent(
 private fun PopularBookmarkItem(
     post: Post,
     count: Int,
-    onPostClicked: (Post) -> Unit,
-    onPostLongClicked: (Post) -> Unit,
+    onPostClick: (Post) -> Unit,
+    onPostLongClick: (Post) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -149,10 +147,10 @@ private fun PopularBookmarkItem(
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
             .combinedClickable(
-                onClick = { onPostClicked(post) },
+                onClick = { onPostClick(post) },
                 onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onPostLongClicked(post)
+                    onPostLongClick(post)
                 },
             ),
         shape = MaterialTheme.shapes.small,

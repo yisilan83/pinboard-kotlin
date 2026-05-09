@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,10 +40,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,8 +57,10 @@ import com.fibelatti.core.android.extension.shareText
 import com.fibelatti.core.functional.Failure
 import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.R
-import com.fibelatti.pinboard.core.android.composable.LaunchedErrorHandlerEffect
-import com.fibelatti.pinboard.core.android.composable.RememberedEffect
+import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Browser
+import com.fibelatti.pinboard.core.android.icons.Mobile
 import com.fibelatti.pinboard.core.extension.ScrollDirection
 import com.fibelatti.pinboard.core.extension.applySecureFlag
 import com.fibelatti.pinboard.core.extension.materialAlertDialogBuilder
@@ -117,9 +119,9 @@ fun BookmarkDetailsScreen(
             post = post,
             isLoading = isLoading,
             isConnected = isConnected,
-            onOpenInFileViewerClicked = { openUrlInFileViewer(localContext, post) },
-            onOpenInBrowserClicked = { openUrlInExternalBrowser(localContext, post) },
-            onScrollDirectionChanged = mainViewModel::setCurrentScrollDirection,
+            onOpenInFileViewerClick = { openUrlInFileViewer(localContext, post) },
+            onOpenInBrowserClick = { openUrlInExternalBrowser(localContext, post) },
+            onScrollDirectionChange = mainViewModel::setCurrentScrollDirection,
         )
     }
 }
@@ -136,10 +138,10 @@ private fun LaunchedViewModelEffects(
     LaunchedPopularPostsViewModelEffect()
 
     val detailError by postDetailViewModel.error.collectAsStateWithLifecycle()
-    LaunchedErrorHandlerEffect(error = detailError, handler = postDetailViewModel::errorHandled)
+    ErrorHandlerEffect(error = detailError, handler = postDetailViewModel::errorHandled)
 
     val popularError by popularPostsViewModel.error.collectAsStateWithLifecycle()
-    LaunchedErrorHandlerEffect(error = popularError, handler = popularPostsViewModel::errorHandled)
+    ErrorHandlerEffect(error = popularError, handler = popularPostsViewModel::errorHandled)
 
     DisposableEffect(Unit) {
         onDispose {
@@ -215,7 +217,7 @@ private fun LaunchedPostDetailViewModelEffect(
     val localContext = LocalContext.current
     val localView = LocalView.current
 
-    RememberedEffect(screenState) {
+    SideEffect(screenState) {
         val current = screenState
         when {
             current.deleted is Success<Boolean> && current.deleted.value -> {
@@ -253,7 +255,7 @@ private fun LaunchedPopularPostsViewModelEffect(
     val screenState by popularPostsViewModel.screenState.collectAsStateWithLifecycle()
     val localView = LocalView.current
 
-    RememberedEffect(screenState) {
+    SideEffect(screenState) {
         screenState.savedMessage?.let { messageRes ->
             localView.showBanner(messageRes)
             popularPostsViewModel.userNotified()
@@ -297,9 +299,9 @@ fun BookmarkDetailsScreen(
     post: Post,
     isLoading: Boolean,
     isConnected: Boolean,
-    onOpenInFileViewerClicked: () -> Unit,
-    onOpenInBrowserClicked: () -> Unit,
-    onScrollDirectionChanged: (ScrollDirection) -> Unit,
+    onOpenInFileViewerClick: () -> Unit,
+    onOpenInBrowserClick: () -> Unit,
+    onScrollDirectionChange: (ScrollDirection) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var webViewLoadFailed by remember { mutableStateOf(false) }
@@ -309,8 +311,8 @@ fun BookmarkDetailsScreen(
             BookmarkPlaceholder(
                 title = post.displayTitle,
                 url = post.url,
-                onButtonClicked = onOpenInFileViewerClicked,
-                icon = painterResource(id = R.drawable.ic_mobile),
+                onButtonClick = onOpenInFileViewerClick,
+                icon = AppIcons.Mobile,
                 description = stringResource(id = R.string.posts_open_with_file_viewer_description),
                 buttonText = stringResource(id = R.string.posts_open_with_file_viewer),
                 modifier = modifier,
@@ -321,7 +323,7 @@ fun BookmarkDetailsScreen(
             BookmarkPlaceholder(
                 title = post.displayTitle,
                 url = post.url,
-                onButtonClicked = onOpenInBrowserClicked,
+                onButtonClick = onOpenInBrowserClick,
                 description = stringResource(id = R.string.posts_url_offline_error),
                 modifier = modifier,
             )
@@ -331,7 +333,7 @@ fun BookmarkDetailsScreen(
             BookmarkPlaceholder(
                 title = post.displayTitle,
                 url = post.url,
-                onButtonClicked = onOpenInBrowserClicked,
+                onButtonClick = onOpenInBrowserClick,
                 modifier = modifier,
             )
         }
@@ -364,13 +366,13 @@ fun BookmarkDetailsScreen(
                 }
 
                 val nestedScrollDirection by rememberScrollDirection(webView)
-                val currentOnScrollDirectionChanged by rememberUpdatedState(onScrollDirectionChanged)
+                val currentOnScrollDirectionChanged by rememberUpdatedState(onScrollDirectionChange)
 
-                RememberedEffect(nestedScrollDirection) {
+                SideEffect(nestedScrollDirection) {
                     currentOnScrollDirectionChanged(nestedScrollDirection)
                 }
 
-                RememberedEffect(post.id) {
+                SideEffect(post.id) {
                     webView.loadUrl(post.url)
                     webViewLoading = true
                 }
@@ -417,9 +419,9 @@ fun BookmarkDetailsScreen(
 private fun BookmarkPlaceholder(
     title: String,
     url: String,
-    onButtonClicked: () -> Unit,
+    onButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
-    icon: Painter = painterResource(id = R.drawable.ic_browser),
+    icon: ImageVector = AppIcons.Browser,
     description: String = stringResource(id = R.string.posts_url_error),
     buttonText: String = stringResource(id = R.string.posts_open_in_browser),
 ) {
@@ -432,7 +434,7 @@ private fun BookmarkPlaceholder(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            painter = icon,
+            imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(60.dp),
             tint = MaterialTheme.colorScheme.primary,
@@ -467,7 +469,7 @@ private fun BookmarkPlaceholder(
         )
 
         Button(
-            onClick = onButtonClicked,
+            onClick = onButtonClick,
             shapes = ExtendedTheme.defaultButtonShapes,
             modifier = Modifier.padding(top = 24.dp),
         ) {
@@ -485,8 +487,8 @@ private fun FileBookmarkPreview() {
         BookmarkPlaceholder(
             title = "Some bookmark",
             url = "https://www.bookmark.com",
-            onButtonClicked = {},
-            icon = painterResource(id = R.drawable.ic_mobile),
+            onButtonClick = {},
+            icon = AppIcons.Mobile,
             description = stringResource(id = R.string.posts_open_with_file_viewer_description),
             buttonText = stringResource(id = R.string.posts_open_with_file_viewer),
         )
@@ -500,7 +502,7 @@ private fun BookmarkErrorPreview() {
         BookmarkPlaceholder(
             title = "Some bookmark",
             url = "https://www.bookmark.com",
-            onButtonClicked = {},
+            onButtonClick = {},
         )
     }
 }

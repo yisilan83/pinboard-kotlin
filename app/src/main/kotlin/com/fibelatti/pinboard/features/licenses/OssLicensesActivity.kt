@@ -18,19 +18,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.AppTheme
 import com.fibelatti.pinboard.core.android.composable.LongClickIconButton
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.BackArrow
 import com.fibelatti.ui.foundation.copy
 import com.mikepenz.aboutlibraries.Libs
-import com.mikepenz.aboutlibraries.ui.compose.LibrariesContainer
 import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
-import com.mikepenz.aboutlibraries.ui.compose.chipColors
-import com.mikepenz.aboutlibraries.ui.compose.libraryColors
+import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import com.mikepenz.aboutlibraries.ui.compose.produceLibraries
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -70,17 +70,6 @@ private fun OssLicensesScreen(
             .padding(top = paddingValues.calculateTopPadding()),
         contentPadding = paddingValues.copy(top = 0.dp),
         showLicenseBadges = false,
-        colors = LibraryDefaults.libraryColors(
-            libraryBackgroundColor = MaterialTheme.colorScheme.background,
-            libraryContentColor = MaterialTheme.colorScheme.onBackground,
-            versionChipColors = LibraryDefaults.chipColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ),
-            dialogBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            dialogContentColor = MaterialTheme.colorScheme.onSurface,
-            dialogConfirmButtonColor = MaterialTheme.colorScheme.primary,
-        ),
         padding = LibraryDefaults.libraryPadding(
             versionPadding = LibraryDefaults.chipPadding(
                 containerPadding = PaddingValues(start = 8.dp, top = 8.dp, end = 8.dp),
@@ -96,7 +85,7 @@ private fun OssLicensesScreen(
                         .fillMaxWidth(),
                 ) {
                     LongClickIconButton(
-                        painter = painterResource(id = R.drawable.ic_back_arrow),
+                        painter = rememberVectorPainter(AppIcons.BackArrow),
                         description = stringResource(id = R.string.cd_navigate_back),
                         onClick = onBackNavClick,
                         iconTint = MaterialTheme.colorScheme.onSurface,

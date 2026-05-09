@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -45,9 +46,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -57,9 +58,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import com.fibelatti.pinboard.R
-import com.fibelatti.pinboard.core.android.composable.LaunchedErrorHandlerEffect
-import com.fibelatti.pinboard.core.android.composable.RememberedEffect
+import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.core.android.composable.SettingToggle
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Close
+import com.fibelatti.pinboard.core.android.icons.Preferences
 import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.AddSearchTag
 import com.fibelatti.pinboard.features.appstate.ClearSearch
@@ -145,7 +148,7 @@ fun SearchBookmarksScreen(
         }
 
         val error: Throwable? by tagsViewModel.error.collectAsStateWithLifecycle()
-        LaunchedErrorHandlerEffect(error = error, handler = tagsViewModel::errorHandled)
+        ErrorHandlerEffect(error = error, handler = tagsViewModel::errorHandled)
 
         DisposableEffect(Unit) {
             onDispose {
@@ -155,15 +158,15 @@ fun SearchBookmarksScreen(
 
         SearchBookmarksScreen(
             searchParameters = currentContent.searchParameters,
-            onSearchTermChanged = { newValue -> searchPostViewModel.runAction(SetTerm(newValue)) },
+            onSearchTermChange = { newValue -> searchPostViewModel.runAction(SetTerm(newValue)) },
             onKeyboardSearch = { searchPostViewModel.runAction(Search) },
-            onSelectedTagRemoved = { tag -> searchPostViewModel.runAction(RemoveSearchTag(tag)) },
+            onSelectedTagRemove = { tag -> searchPostViewModel.runAction(RemoveSearchTag(tag)) },
             onUpdateSearchParameters = { matchAll: Boolean, exactMatch: Boolean ->
                 searchPostViewModel.runAction(SetAdvancedSearchParameters(matchAll, exactMatch))
             },
             availableTags = tagsState.filteredTags,
             isLoadingTags = tagsState.isLoading,
-            onTagsSortOptionClicked = { sorting ->
+            onTagsSortOptionClick = { sorting ->
                 tagsViewModel.sortTags(
                     sorting = when (sorting) {
                         TagList.Sorting.Alphabetically -> TagSorting.AtoZ
@@ -175,8 +178,8 @@ fun SearchBookmarksScreen(
                 )
             },
             tagsSearchTerm = tagsState.currentQuery,
-            onTagsSearchInputChanged = tagsViewModel::searchTags,
-            onAvailableTagClicked = { tag -> searchPostViewModel.runAction(AddSearchTag(tag)) },
+            onTagsSearchInputChange = tagsViewModel::searchTags,
+            onAvailableTagClick = { tag -> searchPostViewModel.runAction(AddSearchTag(tag)) },
             onTagsPullToRefresh = { searchPostViewModel.runAction(RefreshSearchTags) },
         )
     }
@@ -186,16 +189,16 @@ fun SearchBookmarksScreen(
 private fun SearchBookmarksScreen(
     searchParameters: SearchParameters,
     modifier: Modifier = Modifier,
-    onSearchTermChanged: (String) -> Unit = {},
+    onSearchTermChange: (String) -> Unit = {},
     onKeyboardSearch: () -> Unit = {},
-    onSelectedTagRemoved: (Tag) -> Unit = {},
+    onSelectedTagRemove: (Tag) -> Unit = {},
     onUpdateSearchParameters: (matchAll: Boolean, exactMatch: Boolean) -> Unit = { _, _ -> },
     availableTags: List<Tag> = emptyList(),
     isLoadingTags: Boolean = false,
-    onTagsSortOptionClicked: (TagList.Sorting) -> Unit = {},
+    onTagsSortOptionClick: (TagList.Sorting) -> Unit = {},
     tagsSearchTerm: String = "",
-    onTagsSearchInputChanged: (newValue: String) -> Unit = {},
-    onAvailableTagClicked: (Tag) -> Unit = {},
+    onTagsSearchInputChange: (newValue: String) -> Unit = {},
+    onAvailableTagClick: (Tag) -> Unit = {},
     onTagsPullToRefresh: () -> Unit = {},
 ) {
     val advancedDialogState = rememberAppSheetState()
@@ -206,8 +209,8 @@ private fun SearchBookmarksScreen(
             val focusRequester = remember { FocusRequester() }
             val searchTermFieldState = rememberTextFieldState(initialText = searchParameters.term)
 
-            RememberedEffect(searchTermFieldState.text) {
-                onSearchTermChanged(searchTermFieldState.text.toString())
+            SideEffect(searchTermFieldState.text) {
+                onSearchTermChange(searchTermFieldState.text.toString())
             }
 
             LaunchedEffect(Unit) {
@@ -237,7 +240,7 @@ private fun SearchBookmarksScreen(
                     trailingIcon = {
                         if (searchTermFieldState.text.isNotEmpty()) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_close),
+                                imageVector = AppIcons.Close,
                                 contentDescription = null,
                                 modifier = Modifier.clickable(onClick = searchTermFieldState::clearText),
                             )
@@ -262,7 +265,7 @@ private fun SearchBookmarksScreen(
                     modifier = Modifier.padding(bottom = 4.dp, end = 8.dp),
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_preferences),
+                        imageVector = AppIcons.Preferences,
                         contentDescription = stringResource(R.string.search_advanced_content_description),
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
@@ -278,17 +281,17 @@ private fun SearchBookmarksScreen(
                     items = searchParameters.tags.map {
                         ChipGroup.Item(
                             text = it.name,
-                            icon = painterResource(id = R.drawable.ic_close),
+                            icon = rememberVectorPainter(AppIcons.Close),
                         )
                     },
                     onItemClick = { item ->
-                        onSelectedTagRemoved(searchParameters.tags.first { it.name == item.text })
+                        onSelectedTagRemove(searchParameters.tags.first { it.name == item.text })
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp),
                     onItemIconClick = { item ->
-                        onSelectedTagRemoved(searchParameters.tags.first { it.name == item.text })
+                        onSelectedTagRemove(searchParameters.tags.first { it.name == item.text })
                     },
                     itemTextStyle = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = FontFamily.Monospace,
@@ -333,10 +336,10 @@ private fun SearchBookmarksScreen(
         items = availableTags,
         isLoading = isLoadingTags,
         modifier = modifier,
-        onSortOptionClicked = onTagsSortOptionClicked,
+        onSortOptionClick = onTagsSortOptionClick,
         searchInput = tagsSearchTerm,
-        onSearchInputChanged = onTagsSearchInputChanged,
-        onTagClicked = onAvailableTagClicked,
+        onSearchInputChange = onTagsSearchInputChange,
+        onTagClick = onAvailableTagClick,
         onPullToRefresh = onTagsPullToRefresh,
     )
 

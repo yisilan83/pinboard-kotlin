@@ -54,12 +54,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -75,10 +75,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.android.composable.EmptyListContent
-import com.fibelatti.pinboard.core.android.composable.LaunchedErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.core.android.composable.LongClickIconButton
 import com.fibelatti.pinboard.core.android.composable.PullRefreshLayout
 import com.fibelatti.pinboard.core.android.composable.SelectionDialogBottomSheet
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.ChevronTop
+import com.fibelatti.pinboard.core.android.icons.Tag
 import com.fibelatti.pinboard.features.appstate.PostsForTag
 import com.fibelatti.pinboard.features.appstate.RefreshTags
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
@@ -107,7 +110,7 @@ fun TagListScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val error by tagsViewModel.error.collectAsStateWithLifecycle()
-    LaunchedErrorHandlerEffect(error = error, handler = tagsViewModel::errorHandled)
+    ErrorHandlerEffect(error = error, handler = tagsViewModel::errorHandled)
 
     DisposableEffect(Unit) {
         onDispose { keyboardController?.hide() }
@@ -118,7 +121,7 @@ fun TagListScreen(
         items = tagsState.filteredTags,
         isLoading = tagsState.isLoading,
         modifier = modifier.background(color = ExtendedTheme.colors.backgroundNoOverlay),
-        onSortOptionClicked = { sorting ->
+        onSortOptionClick = { sorting ->
             tagsViewModel.sortTags(
                 sorting = when (sorting) {
                     TagList.Sorting.Alphabetically -> TagSorting.AtoZ
@@ -130,9 +133,9 @@ fun TagListScreen(
             )
         },
         searchInput = tagsState.currentQuery,
-        onSearchInputChanged = tagsViewModel::searchTags,
-        onTagClicked = { tagsViewModel.runAction(PostsForTag(it)) },
-        onTagLongClicked = { tag ->
+        onSearchInputChange = tagsViewModel::searchTags,
+        onTagClick = { tagsViewModel.runAction(PostsForTag(it)) },
+        onTagLongClick = { tag ->
             if (AppMode.PINBOARD == appState.appMode) {
                 quickActionTag = tag
                 tagQuickActionsSheetState.showBottomSheet()
@@ -148,7 +151,7 @@ fun TagListScreen(
             options = TagQuickActions.allOptions(tag = tag),
             optionName = { localResources.getString(it.title) },
             optionIcon = TagQuickActions::icon,
-            onOptionSelected = { option ->
+            onOptionSelect = { option ->
                 when (option) {
                     is TagQuickActions.Rename -> renameTagSheetState.showBottomSheet()
                 }
@@ -169,12 +172,12 @@ fun TagList(
     items: List<Tag>,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
-    onSortOptionClicked: (TagList.Sorting) -> Unit = {},
+    onSortOptionClick: (TagList.Sorting) -> Unit = {},
     searchInput: String = "",
-    onSearchInputChanged: (newValue: String) -> Unit = {},
-    onSearchInputFocusChanged: (hasFocus: Boolean) -> Unit = {},
-    onTagClicked: (Tag) -> Unit = {},
-    onTagLongClicked: (Tag) -> Unit = {},
+    onSearchInputChange: (newValue: String) -> Unit = {},
+    onSearchInputFocusChange: (hasFocus: Boolean) -> Unit = {},
+    onTagClick: (Tag) -> Unit = {},
+    onTagLongClick: (Tag) -> Unit = {},
     onPullToRefresh: () -> Unit = {},
 ) {
     Column(
@@ -220,7 +223,7 @@ fun TagList(
                 if (items.isEmpty() && searchInput.isBlank()) {
                     item(key = "empty-list") {
                         EmptyListContent(
-                            icon = painterResource(id = R.drawable.ic_tag),
+                            icon = AppIcons.Tag,
                             title = stringResource(id = R.string.tags_empty_title),
                             description = stringResource(id = R.string.tags_empty_description),
                             scrollable = false,
@@ -229,9 +232,9 @@ fun TagList(
                 } else {
                     stickyHeader(key = "sorting-controls") {
                         TagListSortingControls(
-                            onSortOptionClicked = onSortOptionClicked,
-                            onSearchInputChanged = onSearchInputChanged,
-                            onSearchInputFocusChanged = onSearchInputFocusChanged,
+                            onSortOptionClick = onSortOptionClick,
+                            onSearchInputChange = onSearchInputChange,
+                            onSearchInputFocusChange = onSearchInputFocusChange,
                             searchInput = searchInput,
                             modifier = Modifier.padding(bottom = 8.dp),
                         )
@@ -240,8 +243,8 @@ fun TagList(
                     itemsIndexed(items, key = { _, item -> item.hashCode() }) { idx, item ->
                         TagListItem(
                             item = item,
-                            onTagClicked = onTagClicked,
-                            onTagLongClicked = onTagLongClicked,
+                            onTagClick = onTagClick,
+                            onTagLongClick = onTagLongClick,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
                                 .background(
@@ -290,9 +293,9 @@ fun TagList(
 
 @Composable
 private fun TagListSortingControls(
-    onSortOptionClicked: (TagList.Sorting) -> Unit,
-    onSearchInputChanged: (newValue: String) -> Unit,
-    onSearchInputFocusChanged: (hasFocus: Boolean) -> Unit,
+    onSortOptionClick: (TagList.Sorting) -> Unit,
+    onSearchInputChange: (newValue: String) -> Unit,
+    onSearchInputFocusChange: (hasFocus: Boolean) -> Unit,
     searchInput: String,
     modifier: Modifier = Modifier,
 ) {
@@ -322,11 +325,11 @@ private fun TagListSortingControls(
                         selectedSortingIndex = index
                         showFilter = sorting == TagList.Sorting.Search
 
-                        onSortOptionClicked(sorting)
+                        onSortOptionClick(sorting)
 
                         if (!showFilter) {
-                            onSearchInputChanged("")
-                            onSearchInputFocusChanged(false)
+                            onSearchInputChange("")
+                            onSearchInputFocusChange(false)
                         }
                     },
                     modifier = Modifier
@@ -356,11 +359,11 @@ private fun TagListSortingControls(
         ) {
             OutlinedTextField(
                 value = searchInput,
-                onValueChange = onSearchInputChanged,
+                onValueChange = onSearchInputChange,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp, horizontal = 16.dp)
-                    .onFocusChanged { onSearchInputFocusChanged(it.hasFocus) },
+                    .onFocusChanged { onSearchInputFocusChange(it.hasFocus) },
                 label = { Text(text = stringResource(id = R.string.tag_filter_hint)) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions { focusManager.clearFocus() },
@@ -374,8 +377,8 @@ private fun TagListSortingControls(
 @Composable
 private fun TagListItem(
     item: Tag,
-    onTagClicked: (Tag) -> Unit,
-    onTagLongClicked: (Tag) -> Unit,
+    onTagClick: (Tag) -> Unit,
+    onTagLongClick: (Tag) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -383,10 +386,10 @@ private fun TagListItem(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = { onTagClicked(item) },
+                onClick = { onTagClick(item) },
                 onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onTagLongClicked(item)
+                    onTagLongClick(item)
                 },
             )
             .padding(vertical = 8.dp),
@@ -418,7 +421,7 @@ private fun ScrollToTopButton(
     modifier: Modifier = Modifier,
 ) {
     LongClickIconButton(
-        painter = painterResource(id = R.drawable.ic_chevron_top),
+        painter = rememberVectorPainter(AppIcons.ChevronTop),
         description = stringResource(id = R.string.cd_scroll_to_top),
         onClick = onClick,
         modifier = modifier

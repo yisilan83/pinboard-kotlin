@@ -48,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -55,9 +56,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -67,8 +68,12 @@ import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.LocalAppCompatActivity
 import com.fibelatti.pinboard.core.android.composable.LongClickIconButton
 import com.fibelatti.pinboard.core.android.composable.MainTitle
-import com.fibelatti.pinboard.core.android.composable.RememberedEffect
 import com.fibelatti.pinboard.core.android.getWindowSizeClass
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Hourglass
+import com.fibelatti.pinboard.core.android.icons.Menu
+import com.fibelatti.pinboard.core.android.icons.Pin
+import com.fibelatti.pinboard.core.android.icons.Save
 import com.fibelatti.pinboard.core.extension.ScrollDirection
 import com.fibelatti.pinboard.features.appstate.AccountSwitcherContent
 import com.fibelatti.pinboard.features.appstate.AddPostContent
@@ -137,11 +142,11 @@ fun MainScreen(
         onBack = mainViewModel::navigateBack,
     )
 
-    RememberedEffect(isWidthAtLeastBreakpoint) {
+    SideEffect(isWidthAtLeastBreakpoint) {
         mainViewModel.setMultiPanelAvailable(value = isWidthAtLeastBreakpoint)
     }
 
-    RememberedEffect(appState.content) {
+    SideEffect(appState.content) {
         mainViewModel.setCurrentScrollDirection(ScrollDirection.IDLE)
 
         when (val content = appState.content) {
@@ -380,9 +385,9 @@ private fun MainTopAppBar(
             title = state.title,
             subtitle = state.subtitle,
             navigation = state.navigation,
-            onNavigationClicked = onNavigationClick,
+            onNavigationClick = onNavigationClick,
             actionButton = state.actionButton,
-            onActionButtonClicked = onActionButtonClick,
+            onActionButtonClick = onActionButtonClick,
         )
 
         AnimatedVisibility(visible = isOffline) {
@@ -483,7 +488,7 @@ private fun MainPanelBottomAppBar(
                     label = "Fab_Icon",
                 ) { icon ->
                     Icon(
-                        painter = painterResource(icon ?: R.drawable.ic_hourglass),
+                        imageVector = icon ?: AppIcons.Hourglass,
                         contentDescription = null,
                     )
                 }
@@ -494,7 +499,7 @@ private fun MainPanelBottomAppBar(
         content = {
             if (bottomAppBar.navigationIcon != null) {
                 LongClickIconButton(
-                    painter = painterResource(id = bottomAppBar.navigationIcon),
+                    painter = rememberVectorPainter(bottomAppBar.navigationIcon),
                     description = stringResource(R.string.cd_menu),
                     onClick = onBottomNavClick,
                 )
@@ -551,7 +556,7 @@ private fun RowScope.MenuItemsContent(
             }
         } else {
             LongClickIconButton(
-                painter = painterResource(id = menuItem.icon),
+                painter = rememberVectorPainter(menuItem.icon),
                 description = stringResource(id = menuItem.name),
                 onClick = { onMenuItemClick(menuItem, data) },
                 iconTint = contentColor,
@@ -573,17 +578,17 @@ private fun MainTopAppBarPreview() {
                     navigation = MainState.NavigationComponent.Visible(),
                     actionButton = MainState.ActionButtonComponent.Visible(
                         contentType = Content::class,
-                        icon = R.drawable.ic_save,
+                        icon = AppIcons.Save,
                         label = "Action",
                     ),
                     bottomAppBar = MainState.BottomAppBarComponent.Visible(
                         contentType = Content::class,
                         menuItems = listOf(MainState.MenuItemComponent.SearchBookmarks),
-                        navigationIcon = R.drawable.ic_menu,
+                        navigationIcon = AppIcons.Menu,
                     ),
                     floatingActionButton = MainState.FabComponent.Visible(
                         contentType = Content::class,
-                        icon = R.drawable.ic_pin,
+                        icon = AppIcons.Pin,
                     ),
                 )
             },
@@ -607,11 +612,11 @@ private fun BottomAppBarPreview() {
                 bottomAppBar = MainState.BottomAppBarComponent.Visible(
                     contentType = Content::class,
                     menuItems = listOf(MainState.MenuItemComponent.SearchBookmarks),
-                    navigationIcon = R.drawable.ic_menu,
+                    navigationIcon = AppIcons.Menu,
                 ),
                 floatingActionButton = MainState.FabComponent.Visible(
                     contentType = Content::class,
-                    icon = R.drawable.ic_pin,
+                    icon = AppIcons.Pin,
                 ),
                 onBottomNavClick = {},
                 onMenuItemClick = { _, _ -> },

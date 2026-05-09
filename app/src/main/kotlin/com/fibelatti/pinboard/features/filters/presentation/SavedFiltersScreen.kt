@@ -28,7 +28,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -38,8 +37,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.EmptyListContent
-import com.fibelatti.pinboard.core.android.composable.LaunchedErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.core.android.composable.SelectionDialogBottomSheet
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Filter
 import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.ViewSavedFilter
 import com.fibelatti.pinboard.features.filters.domain.model.SavedFilter
@@ -68,14 +69,14 @@ fun SavedFiltersScreen(
         val savedFilterMenuSheetState = rememberAppSheetState()
 
         val error by savedFiltersViewModel.error.collectAsStateWithLifecycle()
-        LaunchedErrorHandlerEffect(error = error, handler = savedFiltersViewModel::errorHandled)
+        ErrorHandlerEffect(error = error, handler = savedFiltersViewModel::errorHandled)
 
         SavedFiltersScreen(
             savedFilters = savedFilters,
-            onSavedFilterClicked = { savedFilter ->
+            onSavedFilterClick = { savedFilter ->
                 savedFiltersViewModel.runAction(ViewSavedFilter(savedFilter = savedFilter))
             },
-            onSavedFilterLongClicked = { savedFilter ->
+            onSavedFilterLongClick = { savedFilter ->
                 savedFilterMenuSheetState.showBottomSheet(data = savedFilter)
             },
         )
@@ -93,13 +94,13 @@ fun SavedFiltersScreen(
 @Composable
 private fun SavedFiltersScreen(
     savedFilters: List<SavedFilter>,
-    onSavedFilterClicked: (SavedFilter) -> Unit,
-    onSavedFilterLongClicked: (SavedFilter) -> Unit,
+    onSavedFilterClick: (SavedFilter) -> Unit,
+    onSavedFilterLongClick: (SavedFilter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (savedFilters.isEmpty()) {
         EmptyListContent(
-            icon = painterResource(id = R.drawable.ic_filter),
+            icon = AppIcons.Filter,
             title = stringResource(id = R.string.saved_filters_empty_title),
             description = stringResource(id = R.string.saved_filters_empty_description),
             modifier = modifier,
@@ -116,8 +117,8 @@ private fun SavedFiltersScreen(
             items(savedFilters, key = { it.hashCode() }) { savedFilter ->
                 SavedFilterItem(
                     savedFilter = savedFilter,
-                    onClicked = onSavedFilterClicked,
-                    onLongClicked = onSavedFilterLongClicked,
+                    onClick = onSavedFilterClick,
+                    onLongClick = onSavedFilterLongClick,
                 )
             }
         }
@@ -127,8 +128,8 @@ private fun SavedFiltersScreen(
 @Composable
 private fun SavedFilterItem(
     savedFilter: SavedFilter,
-    onClicked: (SavedFilter) -> Unit,
-    onLongClicked: (SavedFilter) -> Unit,
+    onClick: (SavedFilter) -> Unit,
+    onLongClick: (SavedFilter) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -137,10 +138,10 @@ private fun SavedFilterItem(
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
             .combinedClickable(
-                onClick = { onClicked(savedFilter) },
+                onClick = { onClick(savedFilter) },
                 onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClicked(savedFilter)
+                    onLongClick(savedFilter)
                 },
             ),
         shape = MaterialTheme.shapes.small,
@@ -248,7 +249,7 @@ private fun SavedFiltersQuickActionsBottomSheet(
         options = SavedFiltersQuickActions.allOptions(savedFilter),
         optionName = { localResources.getString(it.title) },
         optionIcon = SavedFiltersQuickActions::icon,
-        onOptionSelected = { option ->
+        onOptionSelect = { option ->
             when (option) {
                 is SavedFiltersQuickActions.Delete -> onDeleteClick(savedFilter)
             }
@@ -265,8 +266,8 @@ private fun SavedFilterScreenPreview(
     ExtendedTheme {
         SavedFiltersScreen(
             savedFilters = remember { savedFilters },
-            onSavedFilterClicked = {},
-            onSavedFilterLongClicked = {},
+            onSavedFilterClick = {},
+            onSavedFilterLongClick = {},
             modifier = Modifier.safeDrawingPadding(),
         )
     }
@@ -278,8 +279,8 @@ private fun SavedFilterScreenEmptyPreview() {
     ExtendedTheme {
         SavedFiltersScreen(
             savedFilters = emptyList(),
-            onSavedFilterClicked = {},
-            onSavedFilterLongClicked = {},
+            onSavedFilterClick = {},
+            onSavedFilterLongClick = {},
             modifier = Modifier.safeDrawingPadding(),
         )
     }

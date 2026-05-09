@@ -26,20 +26,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.fibelatti.pinboard.R
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.BackArrow
+import com.fibelatti.pinboard.core.android.icons.Random
+import com.fibelatti.pinboard.core.android.icons.Save
 import com.fibelatti.pinboard.features.appstate.Content
 import com.fibelatti.pinboard.features.main.MainState
 import com.fibelatti.ui.components.AutoSizeText
@@ -51,9 +56,9 @@ fun MainTitle(
     title: MainState.TitleComponent,
     subtitle: MainState.TitleComponent,
     navigation: MainState.NavigationComponent,
-    onNavigationClicked: () -> Unit,
+    onNavigationClick: () -> Unit,
     actionButton: MainState.ActionButtonComponent,
-    onActionButtonClicked: (data: Any?) -> Unit,
+    onActionButtonClick: (data: Any?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -66,18 +71,18 @@ fun MainTitle(
             .padding(bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        var navigationIconRes: Int by remember { mutableIntStateOf(-1) }
-        RememberedEffect(navigation) {
+        var navigationIcon: ImageVector by remember { mutableStateOf(AppIcons.BackArrow) }
+        SideEffect(navigation) {
             if (navigation is MainState.NavigationComponent.Visible) {
-                navigationIconRes = navigation.icon
+                navigationIcon = navigation.icon
             }
         }
 
-        AnimatedVisibility(visible = navigation is MainState.NavigationComponent.Visible && navigationIconRes != -1) {
+        AnimatedVisibility(visible = navigation is MainState.NavigationComponent.Visible) {
             LongClickIconButton(
-                painter = painterResource(id = navigationIconRes),
+                painter = rememberVectorPainter(navigationIcon),
                 description = stringResource(id = R.string.cd_navigate_back),
-                onClick = onNavigationClicked,
+                onClick = onNavigationClick,
                 iconTint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -93,14 +98,14 @@ fun MainTitle(
             verticalArrangement = Arrangement.Center,
         ) {
             var titleText by remember { mutableStateOf("") }
-            RememberedEffect(title) {
+            SideEffect(title) {
                 if (title is MainState.TitleComponent.Visible) {
                     titleText = title.label
                 }
             }
 
             var subtitleText by remember { mutableStateOf("") }
-            RememberedEffect(subtitle) {
+            SideEffect(subtitle) {
                 if (subtitle is MainState.TitleComponent.Visible) {
                     subtitleText = subtitle.label
                 }
@@ -144,15 +149,15 @@ fun MainTitle(
             currentActionButton?.let {
                 if (it.icon != null) {
                     LongClickIconButton(
-                        painter = painterResource(id = it.icon),
+                        painter = rememberVectorPainter(it.icon),
                         description = it.label,
-                        onClick = { onActionButtonClicked(currentActionButton?.data) },
+                        onClick = { onActionButtonClick(currentActionButton?.data) },
                         modifier = Modifier.padding(end = 16.dp),
                         iconTint = MaterialTheme.colorScheme.primary,
                     )
                 } else {
                     TextButton(
-                        onClick = { onActionButtonClicked(currentActionButton?.data) },
+                        onClick = { onActionButtonClick(currentActionButton?.data) },
                         shapes = ExtendedTheme.defaultButtonShapes,
                         modifier = Modifier.padding(end = 16.dp),
                         contentPadding = ButtonDefaults.ExtraSmallContentPadding,
@@ -179,13 +184,13 @@ private fun MainTitlePreview() {
                 title = MainState.TitleComponent.Visible("Title"),
                 subtitle = MainState.TitleComponent.Gone,
                 navigation = MainState.NavigationComponent.Visible(),
-                onNavigationClicked = {},
+                onNavigationClick = {},
                 actionButton = MainState.ActionButtonComponent.Visible(
                     contentType = Content::class,
-                    icon = R.drawable.ic_save,
+                    icon = AppIcons.Save,
                     label = "Action",
                 ),
-                onActionButtonClicked = {},
+                onActionButtonClick = {},
             )
         }
     }
@@ -200,13 +205,13 @@ private fun MainTitleWithSubtitlePreview() {
                 title = MainState.TitleComponent.Visible("Title"),
                 subtitle = MainState.TitleComponent.Visible("Subtitle"),
                 navigation = MainState.NavigationComponent.Visible(),
-                onNavigationClicked = {},
+                onNavigationClick = {},
                 actionButton = MainState.ActionButtonComponent.Visible(
                     contentType = Content::class,
-                    icon = R.drawable.ic_random,
+                    icon = AppIcons.Random,
                     label = "Action",
                 ),
-                onActionButtonClicked = {},
+                onActionButtonClick = {},
             )
         }
     }

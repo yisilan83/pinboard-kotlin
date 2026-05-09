@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -59,8 +60,11 @@ import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.AppConfig
 import com.fibelatti.pinboard.core.AppMode
-import com.fibelatti.pinboard.core.android.composable.LaunchedErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.core.android.composable.SettingToggle
+import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Done
+import com.fibelatti.pinboard.core.android.icons.Save
 import com.fibelatti.pinboard.core.extension.applySecureFlag
 import com.fibelatti.pinboard.core.extension.materialAlertDialogBuilder
 import com.fibelatti.pinboard.core.extension.showBanner
@@ -73,7 +77,6 @@ import com.fibelatti.pinboard.features.posts.domain.model.Post
 import com.fibelatti.pinboard.features.tags.domain.TagManagerState
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import com.fibelatti.pinboard.features.tags.presentation.TagManager
-import com.fibelatti.ui.foundation.RememberedEffect
 import com.fibelatti.ui.foundation.rememberKeyboardState
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
@@ -102,34 +105,34 @@ fun EditBookmarkScreen(
         post = currentState,
         isNewBookmark = editPostScreenState.isNewBookmark,
         isLoading = editPostScreenState.isLoading || postDetailScreenState.isLoading,
-        onUrlChanged = { newValue ->
+        onUrlChange = { newValue ->
             editPostViewModel.updatePost { post -> post.copy(url = newValue) }
         },
         urlError = editPostScreenState.invalidUrlError,
-        onTitleChanged = { newValue ->
+        onTitleChange = { newValue ->
             editPostViewModel.updatePost { post -> post.copy(title = newValue) }
         },
         titleError = editPostScreenState.invalidTitleError,
-        onDescriptionChanged = { newValue ->
+        onDescriptionChange = { newValue ->
             editPostViewModel.updatePost { post -> post.copy(description = newValue) }
         },
-        onNotesChanged = { newValue ->
+        onNotesChange = { newValue ->
             editPostViewModel.updatePost { post -> post.copy(notes = newValue) }
         },
-        onPrivateChanged = { newValue ->
+        onPrivateChange = { newValue ->
             editPostViewModel.updatePost { post -> post.copy(private = newValue) }
         },
-        onReadLaterChanged = { newValue ->
+        onReadLaterChange = { newValue ->
             editPostViewModel.updatePost { post -> post.copy(readLater = newValue) }
         },
         searchTagInput = tagManagerState.currentQuery,
-        onSearchTagInputChanged = editPostViewModel::setTagSearchQuery,
-        onAddTagClicked = editPostViewModel::addTag,
+        onSearchTagInputChange = editPostViewModel::setTagSearchQuery,
+        onAddTagClick = editPostViewModel::addTag,
         suggestedTags = tagManagerState.suggestedTags,
-        onSuggestedTagClicked = editPostViewModel::addTag,
+        onSuggestedTagClick = editPostViewModel::addTag,
         currentTagsTitle = stringResource(id = tagManagerState.displayTitle),
         currentTags = tagManagerState.tags,
-        onRemoveCurrentTagClicked = editPostViewModel::removeTag,
+        onRemoveCurrentTagClick = editPostViewModel::removeTag,
     )
 }
 
@@ -158,13 +161,13 @@ private fun LaunchedViewModelEffects(
         }
     }
 
-    RememberedEffect(imeVisible) {
+    SideEffect(imeVisible) {
         if (imeVisible) {
             mainViewModel.updateState { currentState ->
                 currentState.copy(
                     actionButton = MainState.ActionButtonComponent.Visible(
                         contentType = EditPostContent::class,
-                        icon = R.drawable.ic_save,
+                        icon = AppIcons.Save,
                         label = localResources.getString(R.string.hint_save),
                     ),
                 )
@@ -181,7 +184,7 @@ private fun LaunchedViewModelEffects(
     LaunchedPostDetailViewModelEffect()
 
     val editError by editPostViewModel.error.collectAsStateWithLifecycle()
-    LaunchedErrorHandlerEffect(
+    ErrorHandlerEffect(
         error = editError,
         handler = editPostViewModel::errorHandled,
         postAction = {
@@ -189,7 +192,7 @@ private fun LaunchedViewModelEffects(
                 currentState.copy(
                     floatingActionButton = MainState.FabComponent.Visible(
                         contentType = EditPostContent::class,
-                        icon = R.drawable.ic_done,
+                        icon = AppIcons.Done,
                     ),
                 )
             }
@@ -197,7 +200,7 @@ private fun LaunchedViewModelEffects(
     )
 
     val detailError by postDetailViewModel.error.collectAsStateWithLifecycle()
-    LaunchedErrorHandlerEffect(error = detailError, handler = postDetailViewModel::errorHandled)
+    ErrorHandlerEffect(error = detailError, handler = postDetailViewModel::errorHandled)
 
     DisposableEffect(Unit) {
         onDispose {
@@ -267,7 +270,7 @@ private fun LaunchedEditPostViewModelEffect(
     val screenState by editPostViewModel.screenState.collectAsStateWithLifecycle()
     val localView = LocalView.current
 
-    RememberedEffect(screenState) {
+    SideEffect(screenState) {
         when {
             screenState.saved -> {
                 localView.showBanner(R.string.posts_saved_feedback)
@@ -279,7 +282,7 @@ private fun LaunchedEditPostViewModelEffect(
                     currentState.copy(
                         floatingActionButton = MainState.FabComponent.Visible(
                             contentType = EditPostContent::class,
-                            icon = R.drawable.ic_done,
+                            icon = AppIcons.Done,
                         ),
                     )
                 }
@@ -305,7 +308,7 @@ private fun LaunchedPostDetailViewModelEffect(
 
     val localView = LocalView.current
 
-    RememberedEffect(screenState) {
+    SideEffect(screenState) {
         val current = screenState
         if (current.deleted is Success<Boolean> && current.deleted.value) {
             localView.showBanner(R.string.posts_deleted_feedback)
@@ -322,22 +325,22 @@ private fun EditBookmarkScreen(
     post: Post,
     isNewBookmark: Boolean,
     isLoading: Boolean,
-    onUrlChanged: (String) -> Unit,
+    onUrlChange: (String) -> Unit,
     urlError: String,
-    onTitleChanged: (String) -> Unit,
+    onTitleChange: (String) -> Unit,
     titleError: String,
-    onDescriptionChanged: (String) -> Unit,
-    onNotesChanged: (String) -> Unit,
-    onPrivateChanged: (Boolean) -> Unit,
-    onReadLaterChanged: (Boolean) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onNotesChange: (String) -> Unit,
+    onPrivateChange: (Boolean) -> Unit,
+    onReadLaterChange: (Boolean) -> Unit,
     searchTagInput: String,
-    onSearchTagInputChanged: (String) -> Unit,
-    onAddTagClicked: (String) -> Unit,
+    onSearchTagInputChange: (String) -> Unit,
+    onAddTagClick: (String) -> Unit,
     suggestedTags: List<String>,
-    onSuggestedTagClicked: (String) -> Unit,
+    onSuggestedTagClick: (String) -> Unit,
     currentTagsTitle: String,
     currentTags: List<Tag>,
-    onRemoveCurrentTagClicked: (Tag) -> Unit,
+    onRemoveCurrentTagClick: (Tag) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -348,22 +351,22 @@ private fun EditBookmarkScreen(
             appMode = appMode,
             post = post,
             isNewBookmark = isNewBookmark,
-            onUrlChanged = onUrlChanged,
+            onUrlChange = onUrlChange,
             urlError = urlError,
-            onTitleChanged = onTitleChanged,
+            onTitleChange = onTitleChange,
             titleError = titleError,
-            onDescriptionChanged = onDescriptionChanged,
-            onNotesChanged = onNotesChanged,
-            onPrivateChanged = onPrivateChanged,
-            onReadLaterChanged = onReadLaterChanged,
+            onDescriptionChange = onDescriptionChange,
+            onNotesChange = onNotesChange,
+            onPrivateChange = onPrivateChange,
+            onReadLaterChange = onReadLaterChange,
             searchTagInput = searchTagInput,
-            onSearchTagInputChanged = onSearchTagInputChanged,
-            onAddTagClicked = onAddTagClicked,
+            onSearchTagInputChange = onSearchTagInputChange,
+            onAddTagClick = onAddTagClick,
             suggestedTags = suggestedTags,
-            onSuggestedTagClicked = onSuggestedTagClicked,
+            onSuggestedTagClick = onSuggestedTagClick,
             currentTagsTitle = currentTagsTitle,
             currentTags = currentTags,
-            onRemoveCurrentTagClicked = onRemoveCurrentTagClicked,
+            onRemoveCurrentTagClick = onRemoveCurrentTagClick,
         )
 
         if (isLoading) {
@@ -388,22 +391,22 @@ private fun BookmarkContent(
     appMode: AppMode,
     post: Post,
     isNewBookmark: Boolean,
-    onUrlChanged: (String) -> Unit,
+    onUrlChange: (String) -> Unit,
     urlError: String,
-    onTitleChanged: (String) -> Unit,
+    onTitleChange: (String) -> Unit,
     titleError: String,
-    onDescriptionChanged: (String) -> Unit,
-    onNotesChanged: (String) -> Unit,
-    onPrivateChanged: (Boolean) -> Unit,
-    onReadLaterChanged: (Boolean) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onNotesChange: (String) -> Unit,
+    onPrivateChange: (Boolean) -> Unit,
+    onReadLaterChange: (Boolean) -> Unit,
     searchTagInput: String,
-    onSearchTagInputChanged: (String) -> Unit,
-    onAddTagClicked: (String) -> Unit,
+    onSearchTagInputChange: (String) -> Unit,
+    onAddTagClick: (String) -> Unit,
     suggestedTags: List<String>,
-    onSuggestedTagClicked: (String) -> Unit,
+    onSuggestedTagClick: (String) -> Unit,
     currentTagsTitle: String,
     currentTags: List<Tag>,
-    onRemoveCurrentTagClicked: (Tag) -> Unit,
+    onRemoveCurrentTagClick: (Tag) -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
@@ -431,34 +434,34 @@ private fun BookmarkContent(
             appMode = appMode,
             isNewBookmark = isNewBookmark,
             url = post.url,
-            onUrlChanged = onUrlChanged,
+            onUrlChange = onUrlChange,
             urlError = urlError,
             title = post.displayTitle,
-            onTitleChanged = onTitleChanged,
+            onTitleChange = onTitleChange,
             titleError = titleError,
             description = post.displayDescription,
-            onDescriptionChanged = onDescriptionChanged,
+            onDescriptionChange = onDescriptionChange,
             notes = post.notes.orEmpty(),
-            onNotesChanged = onNotesChanged,
+            onNotesChange = onNotesChange,
         )
 
         BookmarkFlags(
             appMode = appMode,
             private = post.private,
-            onPrivateChanged = onPrivateChanged,
+            onPrivateChange = onPrivateChange,
             readLater = post.readLater,
-            onReadLaterChanged = onReadLaterChanged,
+            onReadLaterChange = onReadLaterChange,
         )
 
         TagManager(
             searchTagInput = searchTagInput,
-            onSearchTagInputChanged = onSearchTagInputChanged,
-            onAddTagClicked = onAddTagClicked,
+            onSearchTagInputChange = onSearchTagInputChange,
+            onAddTagClick = onAddTagClick,
             suggestedTags = suggestedTags,
-            onSuggestedTagClicked = onSuggestedTagClicked,
+            onSuggestedTagClick = onSuggestedTagClick,
             currentTagsTitle = currentTagsTitle,
             currentTags = currentTags,
-            onRemoveCurrentTagClicked = onRemoveCurrentTagClicked,
+            onRemoveCurrentTagClick = onRemoveCurrentTagClick,
             modifier = Modifier.padding(bottom = 100.dp),
         )
     }
@@ -469,15 +472,15 @@ private fun BookmarkBasicDetails(
     appMode: AppMode,
     isNewBookmark: Boolean,
     url: String,
-    onUrlChanged: (String) -> Unit,
+    onUrlChange: (String) -> Unit,
     urlError: String,
     title: String,
-    onTitleChanged: (String) -> Unit,
+    onTitleChange: (String) -> Unit,
     titleError: String,
     description: String,
-    onDescriptionChanged: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
     notes: String,
-    onNotesChanged: (String) -> Unit,
+    onNotesChange: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -501,8 +504,8 @@ private fun BookmarkBasicDetails(
             }
         }
 
-        RememberedEffect(urlFieldState.text) {
-            onUrlChanged(urlFieldState.text.toString())
+        SideEffect(urlFieldState.text) {
+            onUrlChange(urlFieldState.text.toString())
         }
 
         OutlinedTextField(
@@ -538,8 +541,8 @@ private fun BookmarkBasicDetails(
 
         val titleFieldState = rememberTextFieldState(initialText = title)
 
-        RememberedEffect(titleFieldState.text) {
-            onTitleChanged(titleFieldState.text.toString())
+        SideEffect(titleFieldState.text) {
+            onTitleChange(titleFieldState.text.toString())
         }
 
         OutlinedTextField(
@@ -564,8 +567,8 @@ private fun BookmarkBasicDetails(
 
         val descriptionFieldState = rememberTextFieldState(initialText = description)
 
-        RememberedEffect(descriptionFieldState.text) {
-            onDescriptionChanged(descriptionFieldState.text.toString())
+        SideEffect(descriptionFieldState.text) {
+            onDescriptionChange(descriptionFieldState.text.toString())
         }
 
         OutlinedTextField(
@@ -583,8 +586,8 @@ private fun BookmarkBasicDetails(
         if (AppMode.LINKDING == appMode) {
             val notesFieldState = rememberTextFieldState(initialText = notes)
 
-            RememberedEffect(notesFieldState.text) {
-                onNotesChanged(notesFieldState.text.toString())
+            SideEffect(notesFieldState.text) {
+                onNotesChange(notesFieldState.text.toString())
             }
 
             OutlinedTextField(
@@ -613,9 +616,9 @@ private enum class FocusedField {
 private fun BookmarkFlags(
     appMode: AppMode,
     private: Boolean?,
-    onPrivateChanged: (Boolean) -> Unit,
+    onPrivateChange: (Boolean) -> Unit,
     readLater: Boolean?,
-    onReadLaterChanged: (Boolean) -> Unit,
+    onReadLaterChange: (Boolean) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -628,7 +631,7 @@ private fun BookmarkFlags(
                 title = stringResource(id = R.string.posts_add_private),
                 description = null,
                 checked = private == true,
-                onCheckedChange = onPrivateChanged,
+                onCheckedChange = onPrivateChange,
                 modifier = Modifier.weight(0.5f),
             )
         }
@@ -637,7 +640,7 @@ private fun BookmarkFlags(
             title = stringResource(id = R.string.posts_add_read_later),
             description = null,
             checked = readLater == true,
-            onCheckedChange = onReadLaterChanged,
+            onCheckedChange = onReadLaterChange,
             modifier = Modifier.weight(0.5f),
         )
     }
@@ -656,22 +659,22 @@ private fun EditBookmarkScreenPreview(
             post = post.copy(description = post.description.take(200)),
             isNewBookmark = true,
             isLoading = false,
-            onUrlChanged = {},
+            onUrlChange = {},
             urlError = "",
-            onTitleChanged = {},
+            onTitleChange = {},
             titleError = "",
-            onDescriptionChanged = {},
-            onNotesChanged = {},
-            onPrivateChanged = {},
-            onReadLaterChanged = {},
+            onDescriptionChange = {},
+            onNotesChange = {},
+            onPrivateChange = {},
+            onReadLaterChange = {},
             searchTagInput = "",
-            onSearchTagInputChanged = {},
-            onAddTagClicked = {},
+            onSearchTagInputChange = {},
+            onAddTagClick = {},
             suggestedTags = emptyList(),
-            onSuggestedTagClicked = {},
+            onSuggestedTagClick = {},
             currentTagsTitle = stringResource(id = R.string.tags_added_title),
             currentTags = post.tags.orEmpty(),
-            onRemoveCurrentTagClicked = {},
+            onRemoveCurrentTagClick = {},
         )
     }
 }
