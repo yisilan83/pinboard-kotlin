@@ -10,7 +10,7 @@ lifecycle = "2.10.0"
 okhttp = "5.3.2"
 room = "2.8.4"
 coil = "3.4.0"
-spotless = "8.5.1"
+spotless = "8.6.0"
 aboutLibraries = "14.0.1" # 14.1.0 isn't working, needs to be investigated
 
 [libraries]
@@ -121,7 +121,7 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version = "2.3.8" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.9" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
