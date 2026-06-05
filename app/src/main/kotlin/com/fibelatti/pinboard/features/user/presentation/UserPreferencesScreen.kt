@@ -117,7 +117,7 @@ fun UserPreferencesScreen(
     val scope = rememberCoroutineScope()
     val restartActivity: () -> Unit by rememberUpdatedState {
         scope.launch {
-            delay(300L) // Wait until the switch is done animating
+            delay(timeMillis = 300L) // Wait until the switch is done animating
             localActivity?.let(ActivityCompat::recreate)
         }
     }
@@ -768,7 +768,7 @@ private fun RemoveUrlParametersSetting(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     onKeyboardAction = KeyboardActionHandler { submitValueAction() },
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    contentPadding = OutlinedTextFieldDefaults.contentPadding(
+                    contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
                         start = 8.dp,
                         end = 8.dp,
                         bottom = 8.dp,

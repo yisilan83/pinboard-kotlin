@@ -215,7 +215,7 @@ private fun SearchBookmarksScreen(
 
             LaunchedEffect(Unit) {
                 // Compose bug: without this delay the cursor won't appear
-                delay(100)
+                delay(timeMillis = 100)
                 focusRequester.requestFocus()
             }
 
@@ -252,7 +252,7 @@ private fun SearchBookmarksScreen(
                         onKeyboardSearch()
                     },
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    contentPadding = OutlinedTextFieldDefaults.contentPadding(
+                    contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
                         start = 8.dp,
                         end = 8.dp,
                         bottom = 8.dp,
