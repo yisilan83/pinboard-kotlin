@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -28,6 +27,7 @@ import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.CrossfadeLoadingLayout
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.features.appstate.NoteDetailContent
+import com.fibelatti.pinboard.features.main.MainBottomAppBar
 import com.fibelatti.pinboard.features.main.MainState
 import com.fibelatti.pinboard.features.main.MainViewModel
 import com.fibelatti.pinboard.features.notes.domain.model.Note
@@ -47,7 +47,7 @@ fun NoteDetailsScreen(
         color = ExtendedTheme.colors.backgroundNoOverlay,
     ) {
         val noteDetailContent by noteDetailsViewModel.noteDetailContent.collectAsStateWithLifecycle(null)
-        val current by rememberUpdatedState(newValue = noteDetailContent ?: return@Surface)
+        val current = noteDetailContent ?: return@Surface
 
         val localLifecycle = LocalLifecycleOwner.current.lifecycle
         val localOnBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -83,7 +83,7 @@ private fun NoteContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, bottom = 100.dp),
+            .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = MainBottomAppBar.ContentClearance),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(

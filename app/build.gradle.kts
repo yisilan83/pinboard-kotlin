@@ -18,7 +18,7 @@ object AppInfo {
     const val APPLICATION_ID = "com.fibelatti.pinboard"
 
     private const val VERSION_MAJOR = 3
-    private const val VERSION_MINOR = 15
+    private const val VERSION_MINOR = 18
     private const val VERSION_PATCH = 1
     private const val VERSION_BUILD = 0
 
@@ -33,7 +33,7 @@ object AppInfo {
 }
 
 android {
-    val targetSdkVersion: Int by project
+    val targetSdkVersion: Int = findExtraInHierarchy("targetSdkVersion")
 
     namespace = "com.fibelatti.pinboard"
 
@@ -201,7 +201,6 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.adaptive.android)
     implementation(libs.material)
-    implementation(libs.constraint.layout.compose)
 
     implementation(libs.lifecycle.process)
     implementation(libs.lifecycle.runtime)
@@ -213,6 +212,7 @@ dependencies {
     implementation(libs.work.runtime)
 
     implementation(libs.browser)
+    implementation(libs.webkit)
 
     implementation(libs.compose.material)
     debugImplementation(libs.compose.ui.test.manifest)
@@ -231,6 +231,7 @@ dependencies {
 
     implementation(libs.bundles.coil)
     implementation(libs.jsoup)
+    implementation(libs.readability4j)
 
     implementation(libs.about.libraries)
 
@@ -255,6 +256,7 @@ dependencies {
     testImplementation(libs.coroutines.test)
     testImplementation(libs.arch.core.testing)
     testImplementation(libs.turbine)
+    testImplementation(libs.mockwebserver)
 
     androidTestImplementation(libs.runner)
     androidTestUtil(libs.orchestrator)
@@ -276,7 +278,8 @@ dependencies {
  * Prints the current version code. Used for GitHub releases.
  */
 @Suppress("unused")
-val printReleaseVersionCode by tasks.registering {
+val printReleaseVersionCode = tasks.register("printReleaseVersionCode") {
+    description = "Prints the current version code to the console."
     doLast {
         println(AppInfo.versionCode)
     }

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.user.presentation
 
 import androidx.compose.foundation.background
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,6 +32,7 @@ import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.android.composable.LocalAppCompatActivity
 import com.fibelatti.pinboard.features.user.domain.UserCredentials
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 
@@ -109,8 +107,8 @@ private fun AccountSwitcherScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (AppMode.NO_API in userCredentials.getConnectedServices()) {
             item(key = "review_mode") {
@@ -200,9 +198,9 @@ private fun AccountItem(
             .fillMaxWidth()
             .background(
                 color = MaterialTheme.colorScheme.surfaceContainer,
-                shape = MaterialTheme.shapes.small,
+                shape = Shapes.StandaloneShape,
             )
-            .padding(horizontal = 8.dp, vertical = 12.dp),
+            .padding(all = 16.dp),
     ) {
         Text(
             text = title,

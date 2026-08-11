@@ -1,6 +1,5 @@
 package com.fibelatti.pinboard.features.posts.domain
 
-import com.fibelatti.core.functional.Result
 import com.fibelatti.pinboard.features.appstate.SortType
 import com.fibelatti.pinboard.features.posts.domain.model.Post
 import com.fibelatti.pinboard.features.posts.domain.model.PostListResult
@@ -15,6 +14,10 @@ interface PostsRepository {
 
     suspend fun delete(post: Post): Result<Unit>
 
+    suspend fun archive(post: Post): Result<Post>
+
+    suspend fun unarchive(post: Post): Result<Post>
+
     fun getAllPosts(
         sortType: SortType,
         searchTerm: String,
@@ -24,6 +27,7 @@ interface PostsRepository {
         untaggedOnly: Boolean,
         postVisibility: PostVisibility,
         readLaterOnly: Boolean,
+        archivedOnly: Boolean,
         countLimit: Int,
         pageLimit: Int,
         pageOffset: Int,

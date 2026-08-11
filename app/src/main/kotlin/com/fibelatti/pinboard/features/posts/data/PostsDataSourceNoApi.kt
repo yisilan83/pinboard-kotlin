@@ -2,11 +2,7 @@ package com.fibelatti.pinboard.features.posts.data
 
 import androidx.annotation.VisibleForTesting
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.fibelatti.core.functional.Result
-import com.fibelatti.core.functional.Success
-import com.fibelatti.core.functional.catching
-import com.fibelatti.core.functional.getOrDefault
-import com.fibelatti.core.functional.getOrNull
+import com.fibelatti.core.functional.coRunCatching
 import com.fibelatti.pinboard.core.AppConfig
 import com.fibelatti.pinboard.core.extension.replaceHtmlChars
 import com.fibelatti.pinboard.core.functional.resultFrom
@@ -32,7 +28,7 @@ class PostsDataSourceNoApi @Inject constructor(
     private val dateFormatter: DateFormatter,
 ) : PostsRepository {
 
-    override suspend fun update(): Result<String> = Success(dateFormatter.nowAsDataFormat())
+    override suspend fun update(): Result<String> = Result.success(dateFormatter.nowAsDataFormat())
 
     override suspend fun add(post: Post): Result<Post> {
         val existingPost = resultFrom {
@@ -68,6 +64,10 @@ class PostsDataSourceNoApi @Inject constructor(
         postsDao.deletePost(url = post.url)
     }
 
+    override suspend fun archive(post: Post): Result<Post> = Result.failure(InvalidRequestException())
+
+    override suspend fun unarchive(post: Post): Result<Post> = Result.failure(InvalidRequestException())
+
     override fun getAllPosts(
         sortType: SortType,
         searchTerm: String,
@@ -77,6 +77,7 @@ class PostsDataSourceNoApi @Inject constructor(
         untaggedOnly: Boolean,
         postVisibility: PostVisibility,
         readLaterOnly: Boolean,
+        archivedOnly: Boolean,
         countLimit: Int,
         pageLimit: Int,
         pageOffset: Int,
@@ -104,7 +105,7 @@ class PostsDataSourceNoApi @Inject constructor(
         tags: List<Tag>?,
         matchAll: Boolean,
         exactMatch: Boolean,
-    ): Int = catching {
+    ): Int = coRunCatching {
         getLocalDataSize(
             searchTerm = searchTerm,
             tags = tags,
@@ -273,7 +274,7 @@ class PostsDataSourceNoApi @Inject constructor(
         }
     }
 
-    override suspend fun getPendingSyncPosts(): Result<List<Post>> = Success(emptyList())
+    override suspend fun getPendingSyncPosts(): Result<List<Post>> = Result.success(emptyList())
 
     override suspend fun clearCache(): Result<Unit> = resultFrom {
         postsDao.deleteAllPosts()

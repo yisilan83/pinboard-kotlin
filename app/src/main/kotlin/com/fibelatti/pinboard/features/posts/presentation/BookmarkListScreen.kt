@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.posts.presentation
 
 import android.content.ClipData
@@ -34,7 +32,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,7 +57,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -77,14 +73,14 @@ import androidx.lifecycle.flowWithLifecycle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import com.fibelatti.core.android.extension.shareText
-import com.fibelatti.core.functional.Failure
-import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.AppConfig.DEFAULT_PAGE_SIZE
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.android.composable.EmptyListContent
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.LocalAppMessages
 import com.fibelatti.pinboard.core.android.composable.PullRefreshLayout
+import com.fibelatti.pinboard.core.android.composable.RadioSelectionDialogBottomSheet
 import com.fibelatti.pinboard.core.android.composable.SelectionDialogBottomSheet
 import com.fibelatti.pinboard.core.android.composable.TextWithBlockquote
 import com.fibelatti.pinboard.core.android.icons.AppIcons
@@ -99,7 +95,6 @@ import com.fibelatti.pinboard.core.extension.applySecureFlag
 import com.fibelatti.pinboard.core.extension.copyToClipboard
 import com.fibelatti.pinboard.core.extension.materialAlertDialogBuilder
 import com.fibelatti.pinboard.core.extension.rememberScrollDirection
-import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.AccountSwitcherContent
 import com.fibelatti.pinboard.features.appstate.AddPost
 import com.fibelatti.pinboard.features.appstate.ByDateAddedNewestFirst
@@ -129,6 +124,7 @@ import com.fibelatti.pinboard.features.appstate.find
 import com.fibelatti.pinboard.features.appstate.pinboardQueryUrl
 import com.fibelatti.pinboard.features.appstate.pinboardTagsUrl
 import com.fibelatti.pinboard.features.filters.domain.model.SavedFilter
+import com.fibelatti.pinboard.features.main.MainBottomAppBar
 import com.fibelatti.pinboard.features.main.MainState
 import com.fibelatti.pinboard.features.main.MainViewModel
 import com.fibelatti.pinboard.features.posts.domain.model.PendingSync
@@ -138,9 +134,8 @@ import com.fibelatti.pinboard.features.user.presentation.UserPreferencesViewMode
 import com.fibelatti.ui.components.AppSheetState
 import com.fibelatti.ui.components.ChipGroup
 import com.fibelatti.ui.components.MultilineChipGroup
-import com.fibelatti.ui.components.bottomSheetData
 import com.fibelatti.ui.components.rememberAppSheetState
-import com.fibelatti.ui.components.showBottomSheet
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.preview.PreviewAccessibility
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.preview.PreviewThemesAndColors
@@ -181,10 +176,9 @@ fun BookmarkListScreen(
         val userCredentials by userPreferencesViewModel.userCredentials.collectAsStateWithLifecycle()
         val userPreferences by userPreferencesViewModel.currentPreferences.collectAsStateWithLifecycle()
         val tagsClipboard = remember { mutableListOf<Tag>() }
-        val tagsCopiedFeedback = stringResource(R.string.feedback_tags_copied_to_clipboard)
 
         val localContext = LocalContext.current
-        val localView = LocalView.current
+        val localAppMessages = LocalAppMessages.current
         val localResources = LocalResources.current
         val localClipboard = LocalClipboard.current
 
@@ -219,7 +213,7 @@ fun BookmarkListScreen(
                         exactMatch = postListContent.searchParameters.exactMatch,
                     ),
                 )
-                localView.showBanner(R.string.saved_filters_saved_feedback)
+                localAppMessages.show(R.string.saved_filters_saved_feedback)
             },
             onShareClick = shareClick@{
                 val username: String = userCredentials.getPinboardUsername() ?: return@shareClick
@@ -260,11 +254,10 @@ fun BookmarkListScreen(
 
         BookmarkQuickActionsBottomSheet(
             sheetState = bookmarkQuickActionsSheetState,
+            appMode = appState.appMode,
             tagsClipboard = tagsClipboard,
             hiddenPostQuickOptions = userPreferences.hiddenPostQuickOptions,
-            onToggleReadLater = { post ->
-                postDetailViewModel.toggleReadLater(post = post)
-            },
+            onToggleReadLater = postDetailViewModel::toggleReadLater,
             onCopyTags = { tags ->
                 tagsClipboard.clear()
                 tagsClipboard.addAll(tags)
@@ -277,19 +270,19 @@ fun BookmarkListScreen(
                     localClipboard.setClipEntry(ClipEntry(clipData))
                 }
 
-                localView.showBanner(message = tagsCopiedFeedback, duration = 3_000)
+                localAppMessages.show(messageRes = R.string.feedback_tags_copied_to_clipboard)
             },
-            onPasteTags = { post, tags ->
-                postDetailViewModel.addTags(post = post, tags = tags)
-            },
+            onPasteTags = postDetailViewModel::addTags,
             onEdit = { post ->
                 mainViewModel.runAction(action = EditPost(post))
             },
+            onToggleArchive = postDetailViewModel::toggleArchived,
             onDelete = { post ->
                 showDeleteConfirmationDialog(context = localContext) {
                     postDetailViewModel.deletePost(post)
                 }
             },
+            onSaveOfflineCopy = postDetailViewModel::saveOfflineCopy,
             onExpandDescription = { post ->
                 bookmarkDescriptionSheetState.showBottomSheet(data = post)
             },
@@ -309,6 +302,7 @@ fun BookmarkListScreen(
         SortingSelectionBottomSheet(
             sheetState = sortSelectionSheetState,
             appMode = appState.appMode,
+            currentSelection = postListContent.sortType,
             onOptionSelect = { sortType -> mainViewModel.runAction(SetSorting(sortType)) },
         )
     }
@@ -370,34 +364,41 @@ private fun LaunchedPostDetailViewModelEffect(
     val screenState by postDetailViewModel.screenState.collectAsStateWithLifecycle()
 
     val localContext = LocalContext.current
-    val localView = LocalView.current
+    val localAppMessages = LocalAppMessages.current
 
     SideEffect(screenState) {
         val current = screenState
         when {
-            current.deleted is Success<Boolean> && current.deleted.value -> {
-                localView.showBanner(R.string.posts_deleted_feedback)
+            current.deleted.getOrNull() == true -> {
+                localAppMessages.show(R.string.posts_deleted_feedback)
                 postDetailViewModel.userNotified()
             }
 
-            current.deleted is Failure -> {
+            current.deleted.isFailure -> {
                 localContext.materialAlertDialogBuilder().apply {
                     setMessage(R.string.posts_deleted_error)
                     setPositiveButton(R.string.hint_ok) { dialog, _ -> dialog?.dismiss() }
                 }.applySecureFlag().show()
             }
 
-            current.updated is Success<Boolean> && current.updated.value -> {
-                localView.showBanner(R.string.posts_marked_as_read_feedback)
+            current.updated.getOrNull() == true -> {
+                localAppMessages.show(R.string.posts_updated_feedback)
                 postDetailViewModel.userNotified()
             }
 
-            current.updated is Failure -> {
-                localView.showBanner(R.string.posts_marked_as_read_error)
+            current.updated.isFailure -> {
+                localAppMessages.show(R.string.posts_updated_error)
                 postDetailViewModel.userNotified()
             }
         }
     }
+
+    OfflineCopySaveEffect(
+        isSavingOfflineCopy = screenState.isSavingOfflineCopy,
+        offlineCopySaved = screenState.offlineCopySaved,
+        truncated = screenState.offlineCopy?.truncated == true,
+        handler = postDetailViewModel::userNotified,
+    )
 }
 // endregion ViewModel setup
 
@@ -483,7 +484,7 @@ fun BookmarkListScreen(
 
             val listWindowInsets = WindowInsets.safeDrawing
                 .only(if (sidePanelVisible) WindowInsetsSides.Start else WindowInsetsSides.Horizontal)
-                .add(WindowInsets(top = 12.dp, bottom = 100.dp))
+                .add(WindowInsets(top = 8.dp, bottom = MainBottomAppBar.ContentClearance))
 
             PullRefreshLayout(
                 onPullToRefresh = onPullToRefresh,
@@ -601,7 +602,7 @@ private fun BookmarkItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 4.dp),
+            .padding(all = 8.dp),
     ) {
         Surface(
             modifier = Modifier
@@ -613,11 +614,11 @@ private fun BookmarkItem(
                         onPostLongClick(post)
                     },
                 ),
-            shape = MaterialTheme.shapes.small,
+            shape = Shapes.StandaloneShape,
             color = MaterialTheme.colorScheme.surfaceContainer,
         ) {
             Column(
-                modifier = Modifier.padding(start = 8.dp, top = 28.dp, end = 8.dp, bottom = 12.dp),
+                modifier = Modifier.padding(start = 16.dp, top = 28.dp, end = 16.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 if (post.pendingSync != null) {
@@ -626,6 +627,8 @@ private fun BookmarkItem(
                             PendingSync.ADD -> stringResource(id = R.string.posts_pending_add)
                             PendingSync.UPDATE -> stringResource(id = R.string.posts_pending_update)
                             PendingSync.DELETE -> stringResource(id = R.string.posts_pending_delete)
+                            PendingSync.ARCHIVE -> stringResource(id = R.string.posts_pending_archive)
+                            PendingSync.UNARCHIVE -> stringResource(id = R.string.posts_pending_unarchive)
                         },
                     )
                 }
@@ -842,13 +845,16 @@ private fun BookmarkFlags(
 @Composable
 private fun BookmarkQuickActionsBottomSheet(
     sheetState: AppSheetState,
+    appMode: AppMode,
     tagsClipboard: List<Tag>,
     hiddenPostQuickOptions: Set<String>,
     onToggleReadLater: (Post) -> Unit,
     onCopyTags: (List<Tag>) -> Unit,
     onPasteTags: (Post, List<Tag>) -> Unit,
     onEdit: (Post) -> Unit,
+    onToggleArchive: (Post) -> Unit,
     onDelete: (Post) -> Unit,
+    onSaveOfflineCopy: (Post) -> Unit,
     onExpandDescription: (Post) -> Unit,
 ) {
     val post: Post = sheetState.bottomSheetData() ?: return
@@ -861,7 +867,7 @@ private fun BookmarkQuickActionsBottomSheet(
         key2 = tagsClipboard,
         key3 = hiddenPostQuickOptions,
     ) {
-        PostQuickActions.allOptions(post = post, tagsClipboard = tagsClipboard)
+        PostQuickActions.allOptions(post = post, appMode = appMode, tagsClipboard = tagsClipboard)
             .associateWith { option -> option.serializedName in hiddenPostQuickOptions }
     }
 
@@ -889,8 +895,16 @@ private fun BookmarkQuickActionsBottomSheet(
                     onEdit(post)
                 }
 
+                is PostQuickActions.ToggleArchived -> {
+                    onToggleArchive(post)
+                }
+
                 is PostQuickActions.Delete -> {
                     onDelete(post)
+                }
+
+                is PostQuickActions.SaveOfflineCopy -> {
+                    onSaveOfflineCopy(post)
                 }
 
                 is PostQuickActions.CopyUrl -> {
@@ -933,11 +947,12 @@ private fun BookmarkQuickActionsBottomSheet(
 private fun SortingSelectionBottomSheet(
     sheetState: AppSheetState,
     appMode: AppMode,
+    currentSelection: SortType,
     onOptionSelect: (SortType) -> Unit,
 ) {
     val localResources = LocalResources.current
 
-    SelectionDialogBottomSheet(
+    RadioSelectionDialogBottomSheet(
         sheetState = sheetState,
         title = stringResource(R.string.menu_main_sorting),
         options = buildList {
@@ -964,6 +979,7 @@ private fun SortingSelectionBottomSheet(
 
             localResources.getString(resId)
         },
+        currentSelection = currentSelection,
         onOptionSelect = onOptionSelect,
     )
 }

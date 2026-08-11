@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.core.android.composable
 
 import androidx.compose.animation.AnimatedVisibility
@@ -21,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,7 +27,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -95,7 +91,7 @@ fun MainTitle(
                     start = if (navigation is MainState.NavigationComponent.Visible) 0.dp else 16.dp,
                     end = 16.dp,
                 ),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(4.dp, alignment = Alignment.CenterVertically),
         ) {
             var titleText by remember { mutableStateOf("") }
             SideEffect(title) {
@@ -128,7 +124,6 @@ fun MainTitle(
             ) {
                 AutoSizeText(
                     text = subtitleText,
-                    modifier = Modifier.padding(all = 2.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -137,9 +132,7 @@ fun MainTitle(
             }
         }
 
-        val currentActionButton: MainState.ActionButtonComponent.Visible? by rememberUpdatedState(
-            actionButton as? MainState.ActionButtonComponent.Visible,
-        )
+        val currentActionButton = actionButton as? MainState.ActionButtonComponent.Visible
 
         AnimatedVisibility(
             visible = currentActionButton != null,
@@ -151,13 +144,13 @@ fun MainTitle(
                     LongClickIconButton(
                         painter = rememberVectorPainter(it.icon),
                         description = it.label,
-                        onClick = { onActionButtonClick(currentActionButton?.data) },
+                        onClick = { onActionButtonClick(currentActionButton.data) },
                         modifier = Modifier.padding(end = 16.dp),
                         iconTint = MaterialTheme.colorScheme.primary,
                     )
                 } else {
                     TextButton(
-                        onClick = { onActionButtonClick(currentActionButton?.data) },
+                        onClick = { onActionButtonClick(currentActionButton.data) },
                         shapes = ExtendedTheme.defaultButtonShapes,
                         modifier = Modifier.padding(end = 16.dp),
                         contentPadding = ButtonDefaults.ExtraSmallContentPadding,

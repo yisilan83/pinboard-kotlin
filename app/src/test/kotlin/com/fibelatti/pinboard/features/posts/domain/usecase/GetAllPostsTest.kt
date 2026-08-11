@@ -1,6 +1,5 @@
 package com.fibelatti.pinboard.features.posts.domain.usecase
 
-import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.MockDataProvider.SAMPLE_TAGS
 import com.fibelatti.pinboard.MockDataProvider.SAMPLE_URL_VALID
 import com.fibelatti.pinboard.core.AppConfig.DEFAULT_PAGE_SIZE
@@ -45,12 +44,13 @@ class GetAllPostsTest {
                 untaggedOnly = any(),
                 postVisibility = any(),
                 readLaterOnly = any(),
+                archivedOnly = any(),
                 countLimit = any(),
                 pageLimit = any(),
                 pageOffset = any(),
                 forceRefresh = any(),
             )
-        } returns flowOf(Success(mockResponse))
+        } returns flowOf(Result.success(mockResponse))
     }
 
     @Nested
@@ -79,6 +79,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -115,6 +116,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -143,6 +145,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -171,6 +174,7 @@ class GetAllPostsTest {
                     untaggedOnly = true,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -199,6 +203,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -227,6 +232,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -255,6 +261,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.Public,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -283,6 +290,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.Private,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -311,6 +319,36 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = true,
+                    archivedOnly = false,
+                    countLimit = -1,
+                    pageLimit = DEFAULT_PAGE_SIZE,
+                    pageOffset = 0,
+                    forceRefresh = false,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN archived was set as true in the params WHEN getAllPosts is called THEN repository is called with the expected params`() =
+        runTest {
+            // GIVEN
+            val params = GetPostParams(archived = true)
+
+            // WHEN
+            getAllPosts(params)
+
+            // THEN
+            verify {
+                mockPostsRepository.getAllPosts(
+                    sortType = ByDateAddedNewestFirst,
+                    searchTerm = "",
+                    tags = null,
+                    matchAll = true,
+                    exactMatch = false,
+                    untaggedOnly = false,
+                    postVisibility = PostVisibility.None,
+                    readLaterOnly = false,
+                    archivedOnly = true,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -339,6 +377,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,
@@ -367,6 +406,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = 100,
                     pageOffset = 0,
@@ -395,6 +435,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 100,
@@ -423,6 +464,7 @@ class GetAllPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = -1,
                     pageLimit = DEFAULT_PAGE_SIZE,
                     pageOffset = 0,

@@ -1,10 +1,7 @@
 package com.fibelatti.pinboard.features.notes.presentation
 
-import com.fibelatti.core.functional.Failure
-import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.BaseViewModelTest
 import com.fibelatti.pinboard.MockDataProvider.createAppState
-import com.fibelatti.pinboard.core.util.DateFormatter
 import com.fibelatti.pinboard.features.appstate.AppStateRepository
 import com.fibelatti.pinboard.features.appstate.NoteListContent
 import com.fibelatti.pinboard.features.appstate.SetNotes
@@ -31,20 +28,18 @@ internal class NoteListViewModelTest : BaseViewModelTest() {
     }
 
     private val mockNotesRepository = mockk<NotesRepository>()
-    private val mockDateFormatter = mockk<DateFormatter>()
 
     private val noteListViewModel = NoteListViewModel(
         scope = TestScope(dispatcher),
         appStateRepository = mockAppStateRepository,
         notesRepository = mockNotesRepository,
-        dateFormatter = mockDateFormatter,
     )
 
     @Test
     fun `WHEN NoteListContent is emitted AND getAllNotes fails THEN error should receive a value`() = runTest {
         // GIVEN
         val error = Exception()
-        coEvery { mockNotesRepository.getAllNotes() } returns Failure(error)
+        coEvery { mockNotesRepository.getAllNotes() } returns Result.failure(error)
 
         // WHEN
         appStateFlow.value = createAppState(
@@ -65,7 +60,7 @@ internal class NoteListViewModelTest : BaseViewModelTest() {
         runTest {
             // GIVEN
             val mockNotes = mockk<List<Note>>()
-            coEvery { mockNotesRepository.getAllNotes() } returns Success(mockNotes)
+            coEvery { mockNotesRepository.getAllNotes() } returns Result.success(mockNotes)
 
             // WHEN
             appStateFlow.value = createAppState(

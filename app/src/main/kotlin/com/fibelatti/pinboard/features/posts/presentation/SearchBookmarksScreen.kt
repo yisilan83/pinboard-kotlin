@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.posts.presentation
 
 import androidx.activity.compose.BackHandler
@@ -26,13 +24,11 @@ import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,14 +37,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -59,11 +53,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.LocalAppMessages
 import com.fibelatti.pinboard.core.android.composable.SettingToggle
 import com.fibelatti.pinboard.core.android.icons.AppIcons
 import com.fibelatti.pinboard.core.android.icons.Close
 import com.fibelatti.pinboard.core.android.icons.Preferences
-import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.AddSearchTag
 import com.fibelatti.pinboard.features.appstate.ClearSearch
 import com.fibelatti.pinboard.features.appstate.RefreshSearchTags
@@ -86,7 +80,7 @@ import com.fibelatti.ui.components.AutoSizeText
 import com.fibelatti.ui.components.ChipGroup
 import com.fibelatti.ui.components.SingleLineChipGroup
 import com.fibelatti.ui.components.rememberAppSheetState
-import com.fibelatti.ui.components.showBottomSheet
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 import kotlinx.coroutines.delay
@@ -105,7 +99,8 @@ fun SearchBookmarksScreen(
         color = ExtendedTheme.colors.backgroundNoOverlay,
     ) {
         val searchContent: SearchContent? by searchPostViewModel.searchContent.collectAsStateWithLifecycle(null)
-        val currentContent: SearchContent by rememberUpdatedState(newValue = searchContent ?: return@Surface)
+
+        val currentContent: SearchContent = searchContent ?: return@Surface
 
         val tagsState: TagsViewModel.State by tagsViewModel.state.collectAsStateWithLifecycle()
 
@@ -113,7 +108,7 @@ fun SearchBookmarksScreen(
             searchPostViewModel.runAction(Search)
         }
 
-        val localView = LocalView.current
+        val localAppMessages = LocalAppMessages.current
         val localLifecycle = LocalLifecycleOwner.current.lifecycle
         val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -132,7 +127,7 @@ fun SearchBookmarksScreen(
 
                         is MainState.MenuItemComponent.SaveSearch -> {
                             (data as? SavedFilter)?.let(searchPostViewModel::saveFilter)
-                            localView.showBanner(R.string.saved_filters_saved_feedback)
+                            localAppMessages.show(R.string.saved_filters_saved_feedback)
                         }
 
                         else -> Unit
@@ -222,7 +217,7 @@ private fun SearchBookmarksScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 8.dp, bottom = 8.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.Bottom,
             ) {
@@ -252,17 +247,13 @@ private fun SearchBookmarksScreen(
                         onKeyboardSearch()
                     },
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
-                        start = 8.dp,
-                        end = 8.dp,
-                        bottom = 8.dp,
-                    ),
+                    shape = Shapes.StandaloneShape,
                 )
 
                 IconButton(
                     onClick = { advancedDialogState.showBottomSheet() },
                     shapes = IconButtonDefaults.shapes(),
-                    modifier = Modifier.padding(bottom = 4.dp, end = 8.dp),
+                    modifier = Modifier.padding(bottom = 4.dp),
                 ) {
                     Icon(
                         imageVector = AppIcons.Preferences,

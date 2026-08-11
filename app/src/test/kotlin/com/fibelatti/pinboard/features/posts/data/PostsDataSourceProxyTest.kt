@@ -1,6 +1,5 @@
 package com.fibelatti.pinboard.features.posts.data
 
-import com.fibelatti.core.functional.Result
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.features.linkding.data.PostsDataSourceLinkdingApi
 import com.fibelatti.pinboard.features.posts.domain.PostsRepository
@@ -130,6 +129,7 @@ internal class PostsDataSourceProxyTest {
                 untaggedOnly = booleanArg,
                 postVisibility = any(),
                 readLaterOnly = booleanArg,
+                archivedOnly = booleanArg,
                 countLimit = intArg,
                 pageLimit = intArg,
                 pageOffset = intArg,
@@ -146,6 +146,7 @@ internal class PostsDataSourceProxyTest {
             untaggedOnly = booleanArg,
             postVisibility = mockk(),
             readLaterOnly = booleanArg,
+            archivedOnly = booleanArg,
             countLimit = intArg,
             pageLimit = intArg,
             pageOffset = intArg,
@@ -165,6 +166,7 @@ internal class PostsDataSourceProxyTest {
                 untaggedOnly = booleanArg,
                 postVisibility = any(),
                 readLaterOnly = booleanArg,
+                archivedOnly = booleanArg,
                 countLimit = intArg,
                 pageLimit = intArg,
                 pageOffset = intArg,

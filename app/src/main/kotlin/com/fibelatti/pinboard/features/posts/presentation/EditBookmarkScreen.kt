@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -27,7 +28,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -35,7 +35,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -45,7 +44,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -56,20 +54,20 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
-import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.AppConfig
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.LocalAppMessages
 import com.fibelatti.pinboard.core.android.composable.SettingToggle
 import com.fibelatti.pinboard.core.android.icons.AppIcons
 import com.fibelatti.pinboard.core.android.icons.Done
 import com.fibelatti.pinboard.core.android.icons.Save
 import com.fibelatti.pinboard.core.extension.applySecureFlag
 import com.fibelatti.pinboard.core.extension.materialAlertDialogBuilder
-import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.EditPostContent
 import com.fibelatti.pinboard.features.appstate.NavigateBack
+import com.fibelatti.pinboard.features.main.MainBottomAppBar
 import com.fibelatti.pinboard.features.main.MainState
 import com.fibelatti.pinboard.features.main.MainViewModel
 import com.fibelatti.pinboard.features.posts.domain.model.PendingSync
@@ -77,6 +75,7 @@ import com.fibelatti.pinboard.features.posts.domain.model.Post
 import com.fibelatti.pinboard.features.tags.domain.TagManagerState
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import com.fibelatti.pinboard.features.tags.presentation.TagManager
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.foundation.rememberKeyboardState
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
@@ -92,7 +91,7 @@ fun EditBookmarkScreen(
 ) {
     val appState by mainViewModel.appState.collectAsStateWithLifecycle()
     val postState by editPostViewModel.postState.collectAsStateWithLifecycle(initialValue = null)
-    val currentState by rememberUpdatedState(newValue = postState ?: return)
+    val currentState = postState ?: return
 
     val editPostScreenState by editPostViewModel.screenState.collectAsStateWithLifecycle()
     val postDetailScreenState by postDetailViewModel.screenState.collectAsStateWithLifecycle()
@@ -245,6 +244,8 @@ private fun LaunchedMainViewModelEffect(
                         postDetailViewModel.deletePost(post)
                     }
 
+                    is MainState.MenuItemComponent.ToggleArchived -> postDetailViewModel.toggleArchived(post)
+
                     is MainState.MenuItemComponent.OpenInBrowser -> openUrlInExternalBrowser(localContext, post)
 
                     else -> Unit
@@ -268,12 +269,12 @@ private fun LaunchedEditPostViewModelEffect(
     editPostViewModel: EditPostViewModel = hiltViewModel(),
 ) {
     val screenState by editPostViewModel.screenState.collectAsStateWithLifecycle()
-    val localView = LocalView.current
+    val localAppMessages = LocalAppMessages.current
 
     SideEffect(screenState) {
         when {
             screenState.saved -> {
-                localView.showBanner(R.string.posts_saved_feedback)
+                localAppMessages.show(R.string.posts_saved_feedback)
                 editPostViewModel.userNotified()
             }
 
@@ -306,12 +307,12 @@ private fun LaunchedPostDetailViewModelEffect(
 ) {
     val screenState by postDetailViewModel.screenState.collectAsStateWithLifecycle()
 
-    val localView = LocalView.current
+    val localAppMessages = LocalAppMessages.current
 
     SideEffect(screenState) {
         val current = screenState
-        if (current.deleted is Success<Boolean> && current.deleted.value) {
-            localView.showBanner(R.string.posts_deleted_feedback)
+        if (current.deleted.getOrNull() == true) {
+            localAppMessages.show(R.string.posts_deleted_feedback)
             postDetailViewModel.userNotified()
         }
     }
@@ -416,7 +417,8 @@ private fun BookmarkContent(
             .verticalScroll(scrollState)
             .windowInsetsPadding(
                 WindowInsets.safeDrawing
-                    .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+                    .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+                    .add(WindowInsets(top = 8.dp, bottom = MainBottomAppBar.ContentClearance)),
             ),
     ) {
         if (post.pendingSync != null) {
@@ -425,6 +427,8 @@ private fun BookmarkContent(
                     PendingSync.ADD -> stringResource(id = R.string.posts_pending_add_expanded)
                     PendingSync.UPDATE -> stringResource(id = R.string.posts_pending_update_expanded)
                     PendingSync.DELETE -> stringResource(id = R.string.posts_pending_delete_expanded)
+                    PendingSync.ARCHIVE -> stringResource(id = R.string.posts_pending_archive_expanded)
+                    PendingSync.UNARCHIVE -> stringResource(id = R.string.posts_pending_unarchive_expanded)
                 },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
@@ -462,7 +466,7 @@ private fun BookmarkContent(
             currentTagsTitle = currentTagsTitle,
             currentTags = currentTags,
             onRemoveCurrentTagClick = onRemoveCurrentTagClick,
-            modifier = Modifier.padding(bottom = 100.dp),
+            modifier = Modifier.padding(top = 8.dp),
         )
     }
 }
@@ -532,11 +536,7 @@ private fun BookmarkBasicDetails(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next),
             onKeyboardAction = KeyboardActionHandler { focusManager.moveFocus(FocusDirection.Next) },
             lineLimits = TextFieldLineLimits.SingleLine,
-            contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
-                start = 8.dp,
-                end = 8.dp,
-                bottom = 8.dp,
-            ),
+            shape = Shapes.StandaloneShape,
         )
 
         val titleFieldState = rememberTextFieldState(initialText = title)
@@ -558,11 +558,7 @@ private fun BookmarkBasicDetails(
             inputTransformation = InputTransformation.maxLength(AppConfig.PinboardApiMaxLength.TEXT_TYPE.value),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             onKeyboardAction = KeyboardActionHandler { focusManager.moveFocus(FocusDirection.Next) },
-            contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
-                start = 8.dp,
-                end = 8.dp,
-                bottom = 8.dp,
-            ),
+            shape = Shapes.StandaloneShape,
         )
 
         val descriptionFieldState = rememberTextFieldState(initialText = description)
@@ -576,11 +572,7 @@ private fun BookmarkBasicDetails(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(text = stringResource(id = R.string.posts_add_url_description)) },
             supportingText = {},
-            contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
-                start = 8.dp,
-                end = 8.dp,
-                bottom = 8.dp,
-            ),
+            shape = Shapes.StandaloneShape,
         )
 
         if (AppMode.LINKDING == appMode) {
@@ -594,11 +586,7 @@ private fun BookmarkBasicDetails(
                 state = notesFieldState,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(text = stringResource(id = R.string.posts_add_url_notes)) },
-                contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
-                    start = 8.dp,
-                    end = 8.dp,
-                    bottom = 8.dp,
-                ),
+                shape = Shapes.StandaloneShape,
             )
         }
     }
@@ -616,7 +604,7 @@ private fun BookmarkFlags(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, top = 4.dp, end = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         if (AppMode.NO_API != appMode) {
             SettingToggle(
@@ -625,6 +613,7 @@ private fun BookmarkFlags(
                 checked = private == true,
                 onCheckedChange = onPrivateChange,
                 modifier = Modifier.weight(0.5f),
+                shape = Shapes.StartShape,
             )
         }
 
@@ -634,6 +623,7 @@ private fun BookmarkFlags(
             checked = readLater == true,
             onCheckedChange = onReadLaterChange,
             modifier = Modifier.weight(0.5f),
+            shape = if (AppMode.NO_API != appMode) Shapes.EndShape else Shapes.StandaloneShape,
         )
     }
 }

@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.icons.AppIcons
 import com.fibelatti.pinboard.core.android.icons.Pin
+import com.fibelatti.pinboard.features.main.MainBottomAppBar
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 
@@ -46,7 +48,7 @@ fun EmptyListContent(
     ) {
         val windowInsets = WindowInsets.safeDrawing
             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-            .add(WindowInsets(left = 24.dp, top = 16.dp, right = 24.dp, bottom = 100.dp))
+            .add(WindowInsets(left = 16.dp, top = 8.dp, right = 16.dp, bottom = MainBottomAppBar.ContentClearance))
 
         Box(
             modifier = Modifier
@@ -56,7 +58,7 @@ fun EmptyListContent(
                 .border(
                     width = 2.dp,
                     color = MaterialTheme.colorScheme.onSurface,
-                    shape = MaterialTheme.shapes.small,
+                    shape = Shapes.StandaloneShape,
                 )
                 .padding(16.dp),
             contentAlignment = Alignment.TopCenter,

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.tags.presentation
 
 import androidx.compose.animation.AnimatedVisibility
@@ -7,8 +5,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -20,6 +16,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -29,13 +26,9 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -43,19 +36,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
@@ -65,7 +59,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,22 +69,22 @@ import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.android.composable.EmptyListContent
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
-import com.fibelatti.pinboard.core.android.composable.LongClickIconButton
 import com.fibelatti.pinboard.core.android.composable.PullRefreshLayout
 import com.fibelatti.pinboard.core.android.composable.SelectionDialogBottomSheet
 import com.fibelatti.pinboard.core.android.icons.AppIcons
-import com.fibelatti.pinboard.core.android.icons.ChevronTop
 import com.fibelatti.pinboard.core.android.icons.Tag
 import com.fibelatti.pinboard.features.appstate.PostsForTag
 import com.fibelatti.pinboard.features.appstate.RefreshTags
+import com.fibelatti.pinboard.features.main.MainBottomAppBar
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import com.fibelatti.pinboard.features.tags.domain.model.TagSorting
 import com.fibelatti.ui.components.AutoSizeText
+import com.fibelatti.ui.components.ListItem
 import com.fibelatti.ui.components.rememberAppSheetState
-import com.fibelatti.ui.components.showBottomSheet
+import com.fibelatti.ui.foundation.Shapes
+import com.fibelatti.ui.foundation.pxToDp
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
-import kotlinx.coroutines.launch
 
 @Composable
 fun TagListScreen(
@@ -203,18 +196,19 @@ fun TagList(
         Box(
             modifier = Modifier.fillMaxSize(),
         ) {
-            val listState = rememberLazyListState()
-            val showScrollToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 5 } }
-
             val windowInsets: WindowInsets = WindowInsets.safeDrawing
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-                .add(WindowInsets(bottom = 120.dp))
+                .add(WindowInsets(top = 8.dp, bottom = MainBottomAppBar.ContentClearance))
+            var stickyHeaderHeight: Int by remember { mutableIntStateOf(0) }
 
             PullRefreshLayout(
                 onPullToRefresh = onPullToRefresh,
-                listState = listState,
+                // `contentPadding` does not consume insets, so items applying `safeDrawing`
+                // themselves (such as `EmptyListContent`) would otherwise inset twice.
+                modifier = Modifier.consumeWindowInsets(windowInsets),
                 contentPadding = windowInsets.asPaddingValues(),
                 verticalArrangement = Arrangement.spacedBy(space = 1.dp, alignment = Alignment.Top),
+                scrollToTopPadding = stickyHeaderHeight.pxToDp(),
             ) {
                 item(key = "header") {
                     header()
@@ -236,7 +230,9 @@ fun TagList(
                             onSearchInputChange = onSearchInputChange,
                             onSearchInputFocusChange = onSearchInputFocusChange,
                             searchInput = searchInput,
-                            modifier = Modifier.padding(bottom = 8.dp),
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .onSizeChanged { stickyHeaderHeight = it.height },
                         )
                     }
 
@@ -245,47 +241,16 @@ fun TagList(
                             item = item,
                             onTagClick = onTagClick,
                             onTagLongClick = onTagLongClick,
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                    shape = when (idx) {
-                                        0 -> MaterialTheme.shapes.small.copy(
-                                            bottomStart = CornerSize(2.dp),
-                                            bottomEnd = CornerSize(2.dp),
-                                        )
-
-                                        items.size - 1 -> MaterialTheme.shapes.small.copy(
-                                            topStart = CornerSize(2.dp),
-                                            topEnd = CornerSize(2.dp),
-                                        )
-
-                                        else -> RoundedCornerShape(2.dp)
-                                    },
-                                ),
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            shape = when (idx) {
+                                0 if items.size == 1 -> Shapes.StandaloneShape
+                                0 -> Shapes.TopShape
+                                items.size - 1 -> Shapes.BottomShape
+                                else -> Shapes.MiddleShape
+                            },
                         )
                     }
                 }
-            }
-
-            this@Column.AnimatedVisibility(
-                visible = showScrollToTop,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .windowInsetsPadding(windowInsets),
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-            ) {
-                val scope = rememberCoroutineScope()
-
-                ScrollToTopButton(
-                    onClick = {
-                        scope.launch {
-                            listState.animateScrollToItem(index = 0)
-                        }
-                    },
-                    modifier = Modifier.padding(all = 8.dp),
-                )
             }
         }
     }
@@ -343,10 +308,10 @@ private fun TagListSortingControls(
                 ) {
                     AutoSizeText(
                         text = stringResource(id = sorting.label),
-                        style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }
@@ -369,6 +334,7 @@ private fun TagListSortingControls(
                 keyboardActions = KeyboardActions { focusManager.clearFocus() },
                 singleLine = true,
                 maxLines = 1,
+                shape = Shapes.StandaloneShape,
             )
         }
     }
@@ -380,56 +346,23 @@ private fun TagListItem(
     onTagClick: (Tag) -> Unit,
     onTagLongClick: (Tag) -> Unit,
     modifier: Modifier = Modifier,
+    shape: Shape = Shapes.StandaloneShape,
 ) {
-    val haptic = LocalHapticFeedback.current
-    Column(
+    val haptic: HapticFeedback = LocalHapticFeedback.current
+    ListItem(
+        headlineText = item.name,
+        supportingText = pluralStringResource(R.plurals.posts_quantity, item.posts, item.posts),
         modifier = modifier
             .fillMaxWidth()
+            .clip(shape)
             .combinedClickable(
                 onClick = { onTagClick(item) },
                 onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onTagLongClick(item)
                 },
-            )
-            .padding(vertical = 8.dp),
-    ) {
-        Text(
-            text = item.name,
-            modifier = Modifier.padding(horizontal = 8.dp),
-            color = MaterialTheme.colorScheme.secondary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontFamily = FontFamily.Monospace,
             ),
-        )
-        Text(
-            text = pluralStringResource(R.plurals.posts_quantity, item.posts, item.posts),
-            modifier = Modifier.padding(horizontal = 8.dp),
-            color = MaterialTheme.colorScheme.onBackground,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-}
-
-@Composable
-private fun ScrollToTopButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LongClickIconButton(
-        painter = rememberVectorPainter(AppIcons.ChevronTop),
-        description = stringResource(id = R.string.cd_scroll_to_top),
-        onClick = onClick,
-        modifier = modifier
-            .background(
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                shape = MaterialTheme.shapes.large,
-            ),
-        iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+        shape = shape,
     )
 }
 

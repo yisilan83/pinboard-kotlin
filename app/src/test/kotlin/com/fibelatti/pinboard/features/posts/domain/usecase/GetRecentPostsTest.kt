@@ -1,6 +1,5 @@
 package com.fibelatti.pinboard.features.posts.domain.usecase
 
-import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.core.AppConfig.DEFAULT_RECENT_QUANTITY
 import com.fibelatti.pinboard.features.appstate.ByDateAddedNewestFirst
 import com.fibelatti.pinboard.features.appstate.ByDateAddedOldestFirst
@@ -36,12 +35,13 @@ class GetRecentPostsTest {
                 untaggedOnly = any(),
                 postVisibility = any(),
                 readLaterOnly = any(),
+                archivedOnly = any(),
                 countLimit = any(),
                 pageLimit = any(),
                 pageOffset = any(),
                 forceRefresh = any(),
             )
-        } returns flowOf(Success(mockResponse))
+        } returns flowOf(Result.success(mockResponse))
     }
 
     private val getRecentPosts = GetRecentPosts(
@@ -71,6 +71,7 @@ class GetRecentPostsTest {
                     untaggedOnly = false,
                     postVisibility = PostVisibility.None,
                     readLaterOnly = false,
+                    archivedOnly = false,
                     countLimit = DEFAULT_RECENT_QUANTITY,
                     pageLimit = DEFAULT_RECENT_QUANTITY,
                     pageOffset = 0,

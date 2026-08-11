@@ -19,11 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,15 +33,16 @@ import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.CrossfadeLoadingLayout
 import com.fibelatti.pinboard.core.android.composable.EmptyListContent
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.LocalAppMessages
 import com.fibelatti.pinboard.core.android.composable.PullRefreshLayout
-import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.PopularPostsContent
 import com.fibelatti.pinboard.features.appstate.RefreshPopular
 import com.fibelatti.pinboard.features.appstate.ViewPost
 import com.fibelatti.pinboard.features.appstate.find
+import com.fibelatti.pinboard.features.main.MainBottomAppBar
 import com.fibelatti.pinboard.features.posts.domain.model.Post
 import com.fibelatti.ui.components.rememberAppSheetState
-import com.fibelatti.ui.components.showBottomSheet
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 
@@ -57,17 +56,16 @@ fun PopularBookmarksScreen(
         color = ExtendedTheme.colors.backgroundNoOverlay,
     ) {
         val appState by popularPostsViewModel.appState.collectAsStateWithLifecycle()
-        val popularPostsContent by rememberUpdatedState(
-            newValue = appState.content.find<PopularPostsContent>() ?: return@Surface,
-        )
+
+        val popularPostsContent = appState.content.find<PopularPostsContent>() ?: return@Surface
 
         val screenState by popularPostsViewModel.screenState.collectAsStateWithLifecycle()
 
-        val localView = LocalView.current
+        val localAppMessages = LocalAppMessages.current
 
         SideEffect(screenState.savedMessage) {
             screenState.savedMessage?.let { messageRes ->
-                localView.showBanner(messageRes)
+                localAppMessages.show(messageRes)
                 popularPostsViewModel.userNotified()
             }
         }
@@ -115,7 +113,7 @@ fun PopularBookmarksContent(
     } else {
         val windowInsets = WindowInsets.safeDrawing
             .only(if (sidePanelVisible) WindowInsetsSides.Start else WindowInsetsSides.Horizontal)
-            .add(WindowInsets(top = 4.dp, bottom = 100.dp))
+            .add(WindowInsets(top = 8.dp, bottom = MainBottomAppBar.ContentClearance))
 
         PullRefreshLayout(
             onPullToRefresh = onPullToRefresh,
@@ -153,11 +151,11 @@ private fun PopularBookmarkItem(
                     onPostLongClick(post)
                 },
             ),
-        shape = MaterialTheme.shapes.small,
+        shape = Shapes.StandaloneShape,
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            modifier = Modifier.padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(

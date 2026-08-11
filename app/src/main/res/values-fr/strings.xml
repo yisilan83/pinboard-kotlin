@@ -4,12 +4,20 @@
     <string name="hint_ok">OK</string>
     <string name="hint_yes">Oui</string>
     <string name="hint_no">Non</string>
+    <string name="hint_cancel">Annuler</string>
+    <string name="hint_open_settings">Ouvrir les paramètres</string>
     <string name="hint_save">Enregistrer</string>
     <string name="hint_help">Aide</string>
     <string name="hint_mark_as_read">Marquer comme lu</string>
     <string name="hint_add">Ajouter</string>
 
     <string name="alert_confirm_deletion">Voulez-vous vraiment supprimer ce favori ?</string>
+    <string name="alert_confirm_deletion_offline_copy">Voulez-vous vraiment supprimer cette copie hors ligne ?</string>
+    <plurals name="alert_confirm_deletion_offline_copies">
+        <item quantity="one">Cela supprime %d page enregistrée de cet appareil. Le favori est conservé, mais il faudra l\'enregistrer à nouveau pour le lire hors ligne. Continuer ?</item>
+        <item quantity="many">Cela supprime %d pages enregistrées de cet appareil. Les favoris sont conservés, mais il faudra enregistrer chacun d\'eux à nouveau pour les lire hors ligne. Continuer ?</item>
+        <item quantity="other">Cela supprime %d pages enregistrées de cet appareil. Les favoris sont conservés, mais il faudra enregistrer chacun d\'eux à nouveau pour les lire hors ligne. Continuer ?</item>
+    </plurals>
     <string name="alert_confirm_unsaved_changes">Vous avez des modifications non enregistrées qui seront perdues. Continuer sans enregistrer ?</string>
 
     <string name="server_error">Impossible d\'accéder au service. Vérifiez votre jeton d\'authentification ou réessayez dans quelques instants.</string>
@@ -30,9 +38,11 @@
     <string name="menu_navigation_private">Privés</string>
     <string name="menu_navigation_unread">À lire plus tard</string>
     <string name="menu_navigation_untagged">Non étiquetés</string>
+    <string name="menu_navigation_archived">Archivés</string>
     <string name="menu_navigation_tags">Étiquettes</string>
     <string name="menu_navigation_saved_filters">Filtres enregistrés</string>
     <string name="menu_navigation_notes">Notes</string>
+    <string name="menu_navigation_offline_copies">Copies hors ligne</string>
     <string name="menu_navigation_popular">Populaires</string>
 
     <string name="menu_navigation_preferences">Préférences</string>
@@ -41,9 +51,13 @@
 
     <string name="menu_link_delete">Supprimer le favori</string>
     <string name="menu_link_edit">Modifier le favori</string>
+    <string name="menu_link_archive">Archiver le favori</string>
+    <string name="menu_link_unarchive">Désarchiver le favori</string>
     <string name="menu_link_save">Enregistrer le favori</string>
     <string name="menu_link_share">Partager le favori</string>
     <string name="menu_link_open_in_browser">Ouvrir dans le navigateur</string>
+    <string name="menu_link_save_offline_copy">Enregistrer une copie hors ligne</string>
+    <string name="menu_link_toggle_offline_copy">Basculer entre la copie hors ligne et la page en ligne</string>
 
     <string name="menu_search_clear">Effacer le filtre</string>
     <string name="menu_search_save">Enregistrer le filtre</string>
@@ -68,6 +82,8 @@
     <string name="auth_linkding_description">&lt;a href="https://github.com/sissbruecker/linkding/tree/master"&gt;Linkding&lt;/a&gt; est un gestionnaire de favoris auto-hébergé. Lorsque vous utilisez Pinkt pour Linkding, vous devez fournir l\'URL de votre instance et votre jeton, qui se trouvent dans l\'onglet Intégration de la page Paramètres.</string>
 
     <string name="auth_linkding_unreachable_instance_url">Impossible de se connecter au serveur. L\'adresse doit contenir un protocole et être accessible publiquement.</string>
+    <string name="auth_linkding_missing_local_network_permission">L\'accès au réseau local est nécessaire pour joindre une instance auto-hébergée. Accordez l\'autorisation pour continuer.</string>
+    <string name="auth_linkding_missing_local_network_permission_settings">Accordez l\'accès au réseau local via l\'application Paramètres pour joindre une instance auto-hébergée.</string>
 
     <string name="auth_linkding_client_certificate">Certificat client (facultatif) : %s</string>
     <string name="auth_linkding_client_certificate_none">Aucun</string>
@@ -81,6 +97,7 @@
     <string name="posts_title_private">Favoris privés</string>
     <string name="posts_title_unread">À lire plus tard</string>
     <string name="posts_title_untagged">Favoris sans étiquette</string>
+    <string name="posts_title_archived">Favoris archivés</string>
 
     <plurals name="posts_quantity">
         <item quantity="one">%s élément</item>
@@ -103,8 +120,8 @@
     <string name="posts_deleted_feedback">Favori supprimé avec succès</string>
     <string name="posts_deleted_error">Une erreur s\'est produite et le favori n\'a pas été supprimé. Si le problème persiste, veuillez le supprimer via le client web.</string>
 
-    <string name="posts_marked_as_read_feedback">Indicateur « À lire plus tard » mis à jour avec succès</string>
-    <string name="posts_marked_as_read_error">Échec de la mise à jour de l\'indicateur « À lire plus tard ». Veuillez réessayer.</string>
+    <string name="posts_updated_feedback">Favori mis à jour avec succès</string>
+    <string name="posts_updated_error">Échec de la mise à jour du favori. Veuillez réessayer.</string>
 
     <string name="posts_add_title">Enregistrer un favori</string>
     <string name="posts_add_url">URL</string>
@@ -127,12 +144,36 @@
     <string name="posts_url_error">Ce favori ne peut pas être affiché dans le navigateur interne. Utilisez votre navigateur par défaut.</string>
     <string name="posts_open_in_browser">Ouvrir dans un navigateur externe</string>
 
+    <string name="offline_copies_title">Copies hors ligne</string>
+    <string name="offline_copies_empty_title">Aucune copie hors ligne pour l\'instant</string>
+    <string name="offline_copies_empty_description">Enregistrez une copie hors ligne d\'un favori et elle apparaîtra ici, prête à être lue sans connexion.</string>
+    <string name="offline_copies_total_size">%s utilisés</string>
+    <string name="offline_copies_delete">Supprimer la copie hors ligne</string>
+    <string name="offline_copies_deleted">Copie hors ligne supprimée</string>
+    <string name="offline_copies_bulk_delete">Supprimer plusieurs</string>
+    <string name="offline_copies_bulk_delete_action">Supprimer (%d)</string>
+    <string name="offline_copies_bulk_deleted">Copies hors ligne supprimées</string>
+    <string name="offline_copies_open_original">Ouvrir la page d\'origine</string>
+    <plurals name="offline_copies_quantity">
+        <item quantity="one">%d copie</item>
+        <item quantity="many">%d copies</item>
+        <item quantity="other">%d copies</item>
+    </plurals>
+    <string name="posts_offline_copy_saving">Enregistrement d\'une copie hors ligne…</string>
+    <string name="posts_offline_copy_saved">Copie hors ligne enregistrée</string>
+    <string name="posts_offline_copy_saved_truncated">Copie hors ligne enregistrée. Certaines images étaient trop volumineuses et ont été omises.</string>
+    <string name="posts_offline_copy_failed">Impossible d\'enregistrer une copie hors ligne de cette page</string>
+    <string name="posts_offline_copy_unreadable">Cette page ne contenait pas assez de texte lisible pour enregistrer une copie</string>
     <string name="posts_pending_add">Ajout en attente</string>
     <string name="posts_pending_add_expanded">Ce favori sera ajouté dès que le réseau sera disponible</string>
     <string name="posts_pending_update">Mise à jour en attente</string>
     <string name="posts_pending_update_expanded">Ce favori sera mis à jour dès que le réseau sera disponible</string>
     <string name="posts_pending_delete">Suppression en attente</string>
     <string name="posts_pending_delete_expanded">Ce favori sera supprimé dès que le réseau sera disponible</string>
+    <string name="posts_pending_archive">Archivage en attente</string>
+    <string name="posts_pending_archive_expanded">Ce favori sera archivé dès que le réseau sera disponible</string>
+    <string name="posts_pending_unarchive">Désarchivage en attente</string>
+    <string name="posts_pending_unarchive_expanded">Ce favori sera désarchivé dès que le réseau sera disponible</string>
 
     <!-- Offline -->
     <string name="offline_alert">Aucune connexion disponible</string>
@@ -231,8 +272,11 @@
     <string name="quick_actions_paste_tags">Coller les étiquettes</string>
     <string name="quick_actions_edit">Modifier le favori</string>
     <string name="quick_actions_delete">Supprimer le favori</string>
+    <string name="quick_actions_archive">Archiver le favori</string>
+    <string name="quick_actions_unarchive">Désarchiver le favori</string>
     <string name="quick_actions_delete_filter">Supprimer le filtre</string>
     <string name="quick_actions_save">Enregistrer dans les miens</string>
+    <string name="quick_actions_save_offline_copy">Enregistrer une copie hors ligne</string>
     <string name="quick_actions_copy_url">Copier l\'URL</string>
     <string name="quick_actions_share">Partager le favori</string>
     <string name="quick_actions_expand_description">Développer la description</string>
@@ -332,6 +376,10 @@
     <string name="user_preferences_edit_after_sharing_before_saving">Avant l\'enregistrement</string>
     <string name="user_preferences_edit_after_sharing_after_saving">Après l\'enregistrement</string>
     <string name="user_preferences_edit_after_sharing_description">Contrôle quand l\'éditeur de favori doit être affiché après avoir choisi l\'action de partage « Enregistrer le favori ». Pour ignorer l\'éditeur, choisissez plutôt « Sauvegarde rapide d\'un favori » lors du partage.</string>
+    <string name="user_preferences_offline_copies">Copies hors ligne</string>
+    <string name="user_preferences_offline_copies_description">Les pages enregistrées occupent actuellement %s de stockage sur cet appareil.</string>
+    <string name="user_preferences_offline_copies_clear">Supprimer toutes les copies hors ligne</string>
+    <string name="user_preferences_offline_copies_clear_confirmation">Cela supprime toutes les pages enregistrées de cet appareil. Les favoris sont conservés, mais il faudra enregistrer chacun d\'eux à nouveau pour les lire hors ligne. Continuer ?</string>
     <string name="user_preferences_bookmark_quick_options">Actions rapides du favori</string>
     <string name="user_preferences_bookmark_quick_actions_description">Personnaliser les options immédiatement visibles lors de l\'ouverture du menu des actions rapides</string>
 
@@ -379,4 +427,5 @@
     <string name="cd_share_receiver_image">Enregistrement de votre favori</string>
     <string name="cd_menu">Menu</string>
     <string name="cd_scroll_to_top">Faire défiler vers le haut</string>
+    <string name="cd_dismiss_message">Fermer</string>
 </resources>

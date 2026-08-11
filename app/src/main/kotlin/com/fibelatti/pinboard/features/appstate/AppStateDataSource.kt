@@ -5,6 +5,7 @@ import com.fibelatti.pinboard.core.android.ConnectivityInfoProvider
 import com.fibelatti.pinboard.core.di.AppDispatchers
 import com.fibelatti.pinboard.core.di.Scope
 import com.fibelatti.pinboard.core.network.UnauthorizedPluginProvider
+import com.fibelatti.pinboard.features.offline.domain.OfflineCopyRepository
 import com.fibelatti.pinboard.features.user.domain.GetPreferredSortType
 import com.fibelatti.pinboard.features.user.domain.UserRepository
 import javax.inject.Inject
@@ -36,6 +37,7 @@ class AppStateDataSource @Inject constructor(
     private val appModeProvider: AppModeProvider,
     private val unauthorizedPluginProvider: UnauthorizedPluginProvider,
     private val getPreferredSortType: GetPreferredSortType,
+    private val offlineCopyRepository: OfflineCopyRepository,
 ) : AppStateRepository {
 
     private val reducer: MutableSharedFlow<suspend (AppState) -> AppState> = MutableSharedFlow()
@@ -69,7 +71,10 @@ class AppStateDataSource @Inject constructor(
 
     private suspend fun reduce(action: Action) {
         reducer.emit { appState: AppState ->
-            Timber.d("Reducing (action=${action.prettyPrint()}, appState=${appState.prettyPrint()})")
+            Timber.d(
+                "Reducing %s",
+                mapOf("action" to action.prettyPrint(), "appState" to appState.prettyPrint()),
+            )
 
             val newContent: Content = when (action) {
                 is AppAction -> {
@@ -91,6 +96,17 @@ class AppStateDataSource @Inject constructor(
                             appModeProvider.setSelection(appMode = null)
                             unauthorizedPluginProvider.disable(appMode = action.appMode)
                             userRepository.clearAuthToken(appMode = action.appMode)
+
+                            // Only a deliberate logout drops the copies: the bookmarks they belong
+                            // to are gone for good, so the files would sit in `filesDir` forever
+                            // with nothing left to reference them.
+                            //
+                            // An invalid token is not the same thing. The bookmarks survive it, and
+                            // the saved copies are the only thing still readable until the user
+                            // signs back in, so they must outlive it.
+                            if (action is UserLoggedOut) {
+                                offlineCopyRepository.deleteAll(appMode = action.appMode)
+                            }
 
                             when {
                                 action is UserLoginFailed -> appState.content
@@ -120,17 +136,22 @@ class AppStateDataSource @Inject constructor(
         }
     }
 
+    /**
+     * Walks up to the direct subtype of [Action] — the type the [ActionHandler]s are keyed by.
+     *
+     * The walk starts at this instance's own type, not its supertype: R8 vertically merges a
+     * sealed group with a single subclass into that subclass, leaving the concrete action as a
+     * direct child of [Action] in release builds.
+     */
     @Suppress("UNCHECKED_CAST")
     private fun Action.getActionType(): Class<out Action> {
-        val thisType: Class<out Action> = this::class.java
-        if (thisType == Action::class.java) return thisType
+        var type: Class<out Action> = this::class.java
 
-        var supertype: Class<out Action> = thisType.superclass as Class<out Action>
-        while (supertype.superclass != Action::class.java) {
-            supertype = supertype.superclass as Class<out Action>
+        while (type.superclass != null && type.superclass != Action::class.java) {
+            type = type.superclass as Class<out Action>
         }
 
-        return supertype
+        return type
     }
 
     private fun getInitialContent(): Content {

@@ -4,7 +4,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.getByType
 
 @Suppress("Unused")
 class SpotlessPlugin : Plugin<Project> {
@@ -14,7 +13,6 @@ class SpotlessPlugin : Plugin<Project> {
             apply(plugin = "com.diffplug.spotless")
 
             if (target === rootProject) {
-                extensions.getByType<SpotlessExtension>().predeclareDeps()
                 extensions.configure<SpotlessExtensionPredeclare> { configureSpotless() }
             } else {
                 extensions.configure<SpotlessExtension> { configureSpotless() }
@@ -33,7 +31,7 @@ class SpotlessPlugin : Plugin<Project> {
             ktlint("1.8.0")
                 .setEditorConfigPath("${target.rootProject.projectDir}/.editorconfig")
                 .editorConfigOverride(allRules)
-                .customRuleSets(listOf("io.nlopez.compose.rules:ktlint:0.5.8"))
+                .customRuleSets(listOf("io.nlopez.compose.rules:ktlint:0.6.0"))
 
             trimTrailingWhitespace()
             leadingTabsToSpaces()
@@ -69,7 +67,7 @@ class SpotlessPlugin : Plugin<Project> {
             "ktlint_code_style" to "android_studio",
             "ktlint_function_naming_ignore_when_annotated_with" to "Composable",
             "ktlint_ignore_back_ticked_identifier" to true,
-            "compose_allowed_composition_locals" to "LocalExtendedColors,LocalAppCompatActivity",
+            "compose_allowed_composition_locals" to "LocalExtendedColors,LocalAppCompatActivity,LocalAppMessages",
         )
 
         val disabledRules: Map<String, String> = listOf(

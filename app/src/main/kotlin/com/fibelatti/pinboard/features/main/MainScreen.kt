@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.main
 
 import androidx.activity.compose.BackHandler
@@ -29,6 +27,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
@@ -38,12 +37,13 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -51,26 +51,34 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.findRootCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.window.core.layout.WindowSizeClass
 import com.fibelatti.pinboard.R
+import com.fibelatti.pinboard.core.android.composable.AppSnackbar
 import com.fibelatti.pinboard.core.android.composable.LocalAppCompatActivity
+import com.fibelatti.pinboard.core.android.composable.LocalAppMessages
 import com.fibelatti.pinboard.core.android.composable.LongClickIconButton
 import com.fibelatti.pinboard.core.android.composable.MainTitle
 import com.fibelatti.pinboard.core.android.getWindowSizeClass
 import com.fibelatti.pinboard.core.android.icons.AppIcons
-import com.fibelatti.pinboard.core.android.icons.Hourglass
 import com.fibelatti.pinboard.core.android.icons.Menu
 import com.fibelatti.pinboard.core.android.icons.Pin
 import com.fibelatti.pinboard.core.android.icons.Save
@@ -86,6 +94,8 @@ import com.fibelatti.pinboard.features.appstate.ExternalContent
 import com.fibelatti.pinboard.features.appstate.LoginContent
 import com.fibelatti.pinboard.features.appstate.NoteDetailContent
 import com.fibelatti.pinboard.features.appstate.NoteListContent
+import com.fibelatti.pinboard.features.appstate.OfflineCopyDetailContent
+import com.fibelatti.pinboard.features.appstate.OfflineCopyListContent
 import com.fibelatti.pinboard.features.appstate.PopularPostDetailContent
 import com.fibelatti.pinboard.features.appstate.PopularPostsContent
 import com.fibelatti.pinboard.features.appstate.PostDetailContent
@@ -97,10 +107,13 @@ import com.fibelatti.pinboard.features.appstate.SearchContent
 import com.fibelatti.pinboard.features.appstate.TagListContent
 import com.fibelatti.pinboard.features.appstate.UserPreferencesContent
 import com.fibelatti.pinboard.features.appstate.find
+import com.fibelatti.pinboard.features.appstate.resolveTypeForSidePanel
 import com.fibelatti.pinboard.features.filters.presentation.SavedFiltersScreen
 import com.fibelatti.pinboard.features.navigation.NavigationMenuBottomSheet
 import com.fibelatti.pinboard.features.notes.presentation.NoteDetailsScreen
 import com.fibelatti.pinboard.features.notes.presentation.NoteListScreen
+import com.fibelatti.pinboard.features.offline.presentation.OfflineCopyDetailScreen
+import com.fibelatti.pinboard.features.offline.presentation.OfflineCopyListScreen
 import com.fibelatti.pinboard.features.posts.presentation.BookmarkDetailsScreen
 import com.fibelatti.pinboard.features.posts.presentation.BookmarkListScreen
 import com.fibelatti.pinboard.features.posts.presentation.EditBookmarkScreen
@@ -111,7 +124,6 @@ import com.fibelatti.pinboard.features.user.presentation.AccountSwitcherScreen
 import com.fibelatti.pinboard.features.user.presentation.AuthScreen
 import com.fibelatti.pinboard.features.user.presentation.UserPreferencesScreen
 import com.fibelatti.ui.components.rememberAppSheetState
-import com.fibelatti.ui.components.showBottomSheet
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 import kotlin.reflect.KClass
@@ -168,6 +180,7 @@ fun MainScreen(
         state = state,
         sidePanelVisible = appState.sidePanelVisible,
         content = appState.content,
+        snackbarHostState = LocalAppMessages.current.snackbarHostState,
         onNavigationClick = {
             localOnBackPressedDispatcher?.onBackPressed()
         },
@@ -214,6 +227,7 @@ fun MainScreen(
     state: MainState,
     sidePanelVisible: Boolean,
     content: Content,
+    snackbarHostState: SnackbarHostState,
     onNavigationClick: () -> Unit,
     onActionButtonClick: (data: Any?) -> Unit,
     onOfflineRetryClick: () -> Unit,
@@ -268,12 +282,31 @@ fun MainScreen(
             }
         }
 
-        val bottomBarVisible = content !is LoginContent &&
-            state.floatingActionButton is MainState.FabComponent.Visible &&
-            state.scrollDirection != ScrollDirection.DOWN
+        val shouldShowBottomBar: Boolean = content !is LoginContent &&
+            state.scrollDirection != ScrollDirection.DOWN &&
+            state.isBottomBarVisible()
+        // The bar handles its own insets, so the snackbar only needs them when the bar is away.
+        val bottomInset: Int = WindowInsets.navigationBars
+            .add(WindowInsets.displayCutout)
+            .getBottom(LocalDensity.current)
+        var bottomBarTop by remember { mutableIntStateOf(0) }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(x = 0, y = -maxOf(bottomBarTop, bottomInset)) },
+        ) { snackbarData ->
+            AppSnackbar(
+                snackbarData = snackbarData,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp),
+            )
+        }
 
         AnimatedVisibility(
-            visible = bottomBarVisible,
+            visible = shouldShowBottomBar,
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it }),
         ) {
@@ -285,6 +318,12 @@ fun MainScreen(
                 onSideMenuItemClick = onSideMenuItemClick,
                 onFabClick = onFabClick,
                 modifier = Modifier
+                    .onGloballyPositioned { coordinates ->
+                        val rootHeight: Int = coordinates.findRootCoordinates().size.height
+                        bottomBarTop = (rootHeight - coordinates.positionInRoot().y)
+                            .toInt()
+                            .coerceAtLeast(0)
+                    }
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .windowInsetsPadding(
@@ -306,12 +345,7 @@ private fun MainPanelContent(
     modifier: Modifier = Modifier,
 ) {
     val mainPanelContent: KClass<out Content> = remember(content::class, sidePanelVisible) {
-        when {
-            sidePanelVisible && content::class == PostDetailContent::class -> PostListContent::class
-            sidePanelVisible && content::class == NoteDetailContent::class -> NoteListContent::class
-            sidePanelVisible && content::class == PopularPostDetailContent::class -> PopularPostsContent::class
-            else -> content::class
-        }
+        content::class.resolveTypeForSidePanel(sidePanelVisible = sidePanelVisible)
     }
     val postListContent: PostListContent? = remember(content) { content.find() }
 
@@ -345,6 +379,8 @@ private fun MainPanelContent(
             SavedFiltersContent::class -> SavedFiltersScreen()
             NoteListContent::class -> NoteListScreen()
             NoteDetailContent::class -> NoteDetailsScreen()
+            OfflineCopyListContent::class -> OfflineCopyListScreen()
+            OfflineCopyDetailContent::class -> OfflineCopyDetailScreen()
             PopularPostsContent::class -> PopularBookmarksScreen()
             PopularPostDetailContent::class -> BookmarkDetailsScreen()
             AccountSwitcherContent::class -> AccountSwitcherScreen()
@@ -364,6 +400,7 @@ private fun SidePanelContent(
         when (contentClass) {
             PostDetailContent::class, PopularPostDetailContent::class -> BookmarkDetailsScreen()
             NoteDetailContent::class -> NoteDetailsScreen()
+            OfflineCopyDetailContent::class -> OfflineCopyDetailScreen()
         }
     }
 }
@@ -473,24 +510,26 @@ private fun MainPanelBottomAppBar(
     if (bottomAppBar !is MainState.BottomAppBarComponent.Visible) return
 
     val expanded: Boolean = bottomAppBar.navigationIcon != null || bottomAppBar.menuItems.isNotEmpty()
-    val fab by rememberUpdatedState(floatingActionButton as? MainState.FabComponent.Visible)
+    val fab = floatingActionButton as? MainState.FabComponent.Visible
 
     HorizontalFloatingToolbar(
         expanded = expanded,
         floatingActionButton = {
-            FloatingToolbarDefaults.VibrantFloatingActionButton(
-                onClick = { onFabClick(fab?.data) },
-                modifier = Modifier.testTag("fab-${floatingActionButton.contentType.simpleName}"),
-            ) {
-                AnimatedContent(
-                    targetState = fab?.icon,
-                    transitionSpec = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() },
-                    label = "Fab_Icon",
-                ) { icon ->
-                    Icon(
-                        imageVector = icon ?: AppIcons.Hourglass,
-                        contentDescription = null,
-                    )
+            if (fab != null) {
+                FloatingToolbarDefaults.VibrantFloatingActionButton(
+                    onClick = { onFabClick(fab.data) },
+                    modifier = Modifier.testTag("fab-${floatingActionButton.contentType.simpleName}"),
+                ) {
+                    AnimatedContent(
+                        targetState = fab.icon,
+                        transitionSpec = { fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut() },
+                        label = "Fab_Icon",
+                    ) { icon ->
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         },
@@ -563,6 +602,19 @@ private fun RowScope.MenuItemsContent(
             )
         }
     }
+}
+
+object MainBottomAppBar {
+
+    /**
+     * Space that scrollable content must leave at the bottom so it is not covered by the bottom app
+     * bar, on top of whatever navigation bar inset already applies.
+     *
+     * Derived from the bar's own geometry: the 64.dp expanded min height of its
+     * `HorizontalFloatingToolbar`, plus the 16.dp offset it is drawn with, plus an 8.dp gap. Screens
+     * reaching for a bottom inset because of the bar should use this rather than a local literal.
+     */
+    val ContentClearance: Dp = 88.dp
 }
 
 // region Previews

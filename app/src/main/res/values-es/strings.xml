@@ -4,12 +4,20 @@
     <string name="hint_ok">OK</string>
     <string name="hint_yes">Sí</string>
     <string name="hint_no">No</string>
+    <string name="hint_cancel">Cancelar</string>
+    <string name="hint_open_settings">Abrir ajustes</string>
     <string name="hint_save">Guardar</string>
     <string name="hint_help">Ayuda</string>
     <string name="hint_mark_as_read">Marcar como leído</string>
     <string name="hint_add">Agregar</string>
 
     <string name="alert_confirm_deletion">¿Estás seguro de que quieres eliminar este marcador?</string>
+    <string name="alert_confirm_deletion_offline_copy">¿Estás seguro de que quieres eliminar esta copia sin conexión?</string>
+    <plurals name="alert_confirm_deletion_offline_copies">
+        <item quantity="one">Esto elimina %d página guardada de este dispositivo. El marcador se conserva, pero para leerlo sin conexión habrá que guardarlo de nuevo. ¿Continuar?</item>
+        <item quantity="many">Esto elimina %d páginas guardadas de este dispositivo. Los marcadores se conservan, pero para leerlos sin conexión habrá que guardar cada uno de nuevo. ¿Continuar?</item>
+        <item quantity="other">Esto elimina %d páginas guardadas de este dispositivo. Los marcadores se conservan, pero para leerlos sin conexión habrá que guardar cada uno de nuevo. ¿Continuar?</item>
+    </plurals>
     <string name="alert_confirm_unsaved_changes">Tienes cambios sin guardar que se perderán. ¿Continuar sin guardar?</string>
 
     <string name="server_error">No se puede acceder al servicio. Comprueba tu token de autenticación o inténtalo de nuevo en breve.</string>
@@ -30,9 +38,11 @@
     <string name="menu_navigation_private">Privados</string>
     <string name="menu_navigation_unread">Para leer después</string>
     <string name="menu_navigation_untagged">Sin etiquetas</string>
+    <string name="menu_navigation_archived">Archivados</string>
     <string name="menu_navigation_tags">Etiquetas</string>
     <string name="menu_navigation_saved_filters">Filtros guardados</string>
     <string name="menu_navigation_notes">Notas</string>
+    <string name="menu_navigation_offline_copies">Copias sin conexión</string>
     <string name="menu_navigation_popular">Populares</string>
 
     <string name="menu_navigation_preferences">Preferencias</string>
@@ -41,9 +51,13 @@
 
     <string name="menu_link_delete">Eliminar marcador</string>
     <string name="menu_link_edit">Editar marcador</string>
+    <string name="menu_link_archive">Archivar marcador</string>
+    <string name="menu_link_unarchive">Desarchivar marcador</string>
     <string name="menu_link_save">Guardar marcador</string>
     <string name="menu_link_share">Compartir marcador</string>
     <string name="menu_link_open_in_browser">Abrir en el navegador</string>
+    <string name="menu_link_save_offline_copy">Guardar copia sin conexión</string>
+    <string name="menu_link_toggle_offline_copy">Cambiar entre copia sin conexión y página en vivo</string>
 
     <string name="menu_search_clear">Borrar filtro</string>
     <string name="menu_search_save">Guardar filtro</string>
@@ -68,6 +82,8 @@
     <string name="auth_linkding_description"><![CDATA[<a href="https://github.com/sissbruecker/linkding/tree/master">Linkding</a> es un gestor de marcadores auto-alojado. Al usar Pinkt para Linkding, debes proporcionar la URL de tu instancia y tu token, que se pueden encontrar en la pestaña Integración de la página de Configuración.]]></string>
 
     <string name="auth_linkding_unreachable_instance_url">No se puede conectar al servidor. La dirección debe contener un protocolo y ser accesible públicamente.</string>
+    <string name="auth_linkding_missing_local_network_permission">Se necesita acceso a la red local para conectar con una instancia autoalojada. Concede el permiso para continuar.</string>
+    <string name="auth_linkding_missing_local_network_permission_settings">Concede el acceso a la red local a través de la app de ajustes para conectar con una instancia autoalojada.</string>
 
     <string name="auth_linkding_client_certificate">Certificado de cliente (opcional): %s</string>
     <string name="auth_linkding_client_certificate_none">Ninguno</string>
@@ -81,6 +97,7 @@
     <string name="posts_title_private">Marcadores privados</string>
     <string name="posts_title_unread">Para leer después</string>
     <string name="posts_title_untagged">Marcadores sin etiqueta</string>
+    <string name="posts_title_archived">Marcadores archivados</string>
 
     <plurals name="posts_quantity">
         <item quantity="one">1 elemento</item>
@@ -103,8 +120,8 @@
     <string name="posts_deleted_feedback">Marcador eliminado correctamente</string>
     <string name="posts_deleted_error">Se produjo un error y el marcador no fue eliminado. Si el problema persiste, elimínalo usando el cliente web.</string>
 
-    <string name="posts_marked_as_read_feedback">Marcador «Para leer después» actualizado correctamente</string>
-    <string name="posts_marked_as_read_error">Error al actualizar el marcador «Para leer después». Por favor, inténtalo de nuevo.</string>
+    <string name="posts_updated_feedback">Marcador actualizado correctamente</string>
+    <string name="posts_updated_error">Error al actualizar el marcador. Por favor, inténtalo de nuevo.</string>
 
     <string name="posts_add_title">Guardar marcador</string>
     <string name="posts_add_url">URL</string>
@@ -127,12 +144,36 @@
     <string name="posts_url_error">Este marcador no se puede ver con el navegador interno. Usa tu navegador predeterminado en su lugar.</string>
     <string name="posts_open_in_browser">Abrir en navegador externo</string>
 
+    <string name="offline_copies_title">Copias sin conexión</string>
+    <string name="offline_copies_empty_title">Aún no hay copias sin conexión</string>
+    <string name="offline_copies_empty_description">Guarda una copia sin conexión de un marcador y aparecerá aquí, lista para leer sin conexión.</string>
+    <string name="offline_copies_total_size">%s en uso</string>
+    <string name="offline_copies_delete">Eliminar copia sin conexión</string>
+    <string name="offline_copies_deleted">Copia sin conexión eliminada</string>
+    <string name="offline_copies_bulk_delete">Eliminar varias</string>
+    <string name="offline_copies_bulk_delete_action">Eliminar (%d)</string>
+    <string name="offline_copies_bulk_deleted">Copias sin conexión eliminadas</string>
+    <string name="offline_copies_open_original">Abrir página original</string>
+    <plurals name="offline_copies_quantity">
+        <item quantity="one">%d copia</item>
+        <item quantity="many">%d copias</item>
+        <item quantity="other">%d copias</item>
+    </plurals>
+    <string name="posts_offline_copy_saving">Guardando una copia sin conexión…</string>
+    <string name="posts_offline_copy_saved">Copia sin conexión guardada</string>
+    <string name="posts_offline_copy_saved_truncated">Copia sin conexión guardada. Algunas imágenes eran demasiado grandes y se omitieron.</string>
+    <string name="posts_offline_copy_failed">No se pudo guardar una copia sin conexión de esta página</string>
+    <string name="posts_offline_copy_unreadable">Esta página no tenía suficiente texto legible para guardar una copia</string>
     <string name="posts_pending_add">Adición pendiente</string>
     <string name="posts_pending_add_expanded">Este marcador se añadirá cuando haya red disponible</string>
     <string name="posts_pending_update">Actualización pendiente</string>
     <string name="posts_pending_update_expanded">Este marcador se actualizará cuando haya red disponible</string>
     <string name="posts_pending_delete">Eliminación pendiente</string>
     <string name="posts_pending_delete_expanded">Este marcador se eliminará cuando haya red disponible</string>
+    <string name="posts_pending_archive">Archivado pendiente</string>
+    <string name="posts_pending_archive_expanded">Este marcador se archivará cuando haya red disponible</string>
+    <string name="posts_pending_unarchive">Desarchivado pendiente</string>
+    <string name="posts_pending_unarchive_expanded">Este marcador se desarchivará cuando haya red disponible</string>
 
     <!-- Offline -->
     <string name="offline_alert">Sin conexión disponible</string>
@@ -231,8 +272,11 @@
     <string name="quick_actions_paste_tags">Pegar etiquetas</string>
     <string name="quick_actions_edit">Editar marcador</string>
     <string name="quick_actions_delete">Eliminar marcador</string>
+    <string name="quick_actions_archive">Archivar marcador</string>
+    <string name="quick_actions_unarchive">Desarchivar marcador</string>
     <string name="quick_actions_delete_filter">Eliminar filtro</string>
     <string name="quick_actions_save">Guardar en los míos</string>
+    <string name="quick_actions_save_offline_copy">Guardar copia sin conexión</string>
     <string name="quick_actions_copy_url">Copiar URL</string>
     <string name="quick_actions_share">Compartir marcador</string>
     <string name="quick_actions_expand_description">Expandir descripción</string>
@@ -332,6 +376,10 @@
     <string name="user_preferences_edit_after_sharing_before_saving">Antes de guardar</string>
     <string name="user_preferences_edit_after_sharing_after_saving">Después de guardar</string>
     <string name="user_preferences_edit_after_sharing_description">Controla cuándo se debe mostrar el editor de marcadores después de elegir la acción de compartir «Guardar marcador». Para omitir el editor, elige «Guardar marcador rápidamente» al compartir en su lugar.</string>
+    <string name="user_preferences_offline_copies">Copias sin conexión</string>
+    <string name="user_preferences_offline_copies_description">Las páginas guardadas ocupan actualmente %s de almacenamiento en este dispositivo.</string>
+    <string name="user_preferences_offline_copies_clear">Eliminar todas las copias sin conexión</string>
+    <string name="user_preferences_offline_copies_clear_confirmation">Esto elimina todas las páginas guardadas de este dispositivo. Los marcadores se conservan, pero para leerlos sin conexión habrá que guardar cada uno de nuevo. ¿Continuar?</string>
     <string name="user_preferences_bookmark_quick_options">Acciones rápidas del marcador</string>
     <string name="user_preferences_bookmark_quick_actions_description">Personalizar qué opciones son visibles inmediatamente al abrir el menú de acciones rápidas</string>
 
@@ -379,4 +427,5 @@
     <string name="cd_share_receiver_image">Guardando tu marcador</string>
     <string name="cd_menu">Menú</string>
     <string name="cd_scroll_to_top">Desplazarse hacia arriba</string>
+    <string name="cd_dismiss_message">Cerrar</string>
 </resources>

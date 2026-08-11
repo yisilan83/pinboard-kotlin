@@ -1,10 +1,10 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.user.presentation
 
 import android.app.Activity
 import android.security.KeyChain
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -39,18 +39,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +69,7 @@ import androidx.core.text.HtmlCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fibelatti.pinboard.R
+import com.fibelatti.pinboard.core.android.LocalNetworkAccessProvider
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
 import com.fibelatti.pinboard.core.android.composable.LocalAppCompatActivity
 import com.fibelatti.pinboard.core.android.composable.LongClickIconButton
@@ -79,7 +79,11 @@ import com.fibelatti.pinboard.core.android.icons.Eye
 import com.fibelatti.pinboard.core.android.icons.EyeSlash
 import com.fibelatti.pinboard.core.android.icons.Help
 import com.fibelatti.pinboard.core.android.icons.Pin
+import com.fibelatti.pinboard.core.extension.canRequestPermissionAgain
+import com.fibelatti.pinboard.core.extension.showLocalNetworkAccessDialog
+import com.fibelatti.pinboard.core.extension.showLocalNetworkAccessSettingsDialog
 import com.fibelatti.ui.components.TextWithLinks
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 
@@ -93,6 +97,27 @@ fun AuthScreen(
     ErrorHandlerEffect(error = error, handler = authViewModel::errorHandled)
 
     val activity: AppCompatActivity = LocalAppCompatActivity.current
+
+    val localNetworkPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted: Boolean ->
+            val canRequestAgain: Boolean = activity.canRequestPermissionAgain(LocalNetworkAccessProvider.PERMISSION)
+
+            authViewModel.localNetworkPermissionResult(granted = granted, canRequestAgain = canRequestAgain)
+
+            if (!granted && !canRequestAgain) {
+                activity.showLocalNetworkAccessSettingsDialog()
+            }
+        },
+    )
+
+    LaunchedEffect(screenState.localNetworkPermissionRequired, localNetworkPermissionLauncher) {
+        if (!screenState.localNetworkPermissionRequired) return@LaunchedEffect
+
+        activity.showLocalNetworkAccessDialog {
+            localNetworkPermissionLauncher.launch(LocalNetworkAccessProvider.PERMISSION)
+        }
+    }
 
     AuthScreen(
         allowSwitching = screenState.allowSwitching,
@@ -148,14 +173,14 @@ private fun AuthScreen(
             imageVector = AppIcons.Pin,
             contentDescription = null,
             modifier = Modifier
-                .padding(top = if (allowSwitching) 40.dp else 0.dp, bottom = 20.dp)
+                .padding(top = if (allowSwitching) 40.dp else 0.dp, bottom = 24.dp)
                 .size(80.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
 
         Surface(
             modifier = Modifier.sizeIn(maxWidth = 600.dp),
-            shape = MaterialTheme.shapes.small,
+            shape = Shapes.StandaloneShape,
             color = MaterialTheme.colorScheme.surfaceContainer,
         ) {
             Column(
@@ -191,11 +216,7 @@ private fun AuthScreen(
                             ),
                             onKeyboardAction = KeyboardActionHandler { focusManager.moveFocus(FocusDirection.Next) },
                             lineLimits = TextFieldLineLimits.SingleLine,
-                            contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
-                                start = 8.dp,
-                                end = 8.dp,
-                                bottom = 8.dp,
-                            ),
+                            shape = Shapes.StandaloneShape,
                         )
 
                         if (instanceUrlError != null) {
@@ -250,11 +271,7 @@ private fun AuthScreen(
                             instanceUrlFieldState.text.toString(),
                         )
                     },
-                    contentPadding = OutlinedTextFieldDefaults.contentPaddingWithLabel(
-                        start = 8.dp,
-                        end = 8.dp,
-                        bottom = 8.dp,
-                    ),
+                    shape = Shapes.StandaloneShape,
                 )
 
                 if (apiTokenError != null) {

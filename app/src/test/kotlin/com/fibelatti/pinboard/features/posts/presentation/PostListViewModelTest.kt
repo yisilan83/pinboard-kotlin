@@ -1,7 +1,5 @@
 package com.fibelatti.pinboard.features.posts.presentation
 
-import com.fibelatti.core.functional.Failure
-import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.BaseViewModelTest
 import com.fibelatti.pinboard.MockDataProvider.SAMPLE_TAGS
 import com.fibelatti.pinboard.MockDataProvider.createAppState
@@ -9,6 +7,7 @@ import com.fibelatti.pinboard.MockDataProvider.createLoginContent
 import com.fibelatti.pinboard.MockDataProvider.createPostListContent
 import com.fibelatti.pinboard.features.appstate.All
 import com.fibelatti.pinboard.features.appstate.AppStateRepository
+import com.fibelatti.pinboard.features.appstate.Archived
 import com.fibelatti.pinboard.features.appstate.Loaded
 import com.fibelatti.pinboard.features.appstate.PostDetailContent
 import com.fibelatti.pinboard.features.appstate.PostListContent
@@ -63,10 +62,10 @@ internal class PostListViewModelTest : BaseViewModelTest() {
     private val mockException = Exception()
 
     private val mockGetAllPosts = mockk<GetAllPosts> {
-        every { this@mockk.invoke(any()) } returns flowOf(Success(mockResponse))
+        every { this@mockk.invoke(any()) } returns flowOf(Result.success(mockResponse))
     }
     private val mockGetRecentPosts = mockk<GetRecentPosts> {
-        every { this@mockk.invoke(any()) } returns flowOf(Success(mockResponse))
+        every { this@mockk.invoke(any()) } returns flowOf(Result.success(mockResponse))
     }
     private val savedFiltersRepository = mockk<SavedFiltersRepository>()
 
@@ -165,7 +164,7 @@ internal class PostListViewModelTest : BaseViewModelTest() {
 
         @Test
         fun `WHEN getAllPosts fails THEN repository won't run any actions`() = runTest {
-            every { mockGetAllPosts(any()) } returns flowOf(Failure(mockException))
+            every { mockGetAllPosts(any()) } returns flowOf(Result.failure(mockException))
 
             postListViewModel.loadContent(
                 createPostListContent(
@@ -181,7 +180,7 @@ internal class PostListViewModelTest : BaseViewModelTest() {
         @Test
         fun `WHEN getAllPosts succeeds and offset is 0 THEN repository will run SetPosts`() = runTest {
             // GIVEN
-            every { mockGetAllPosts(GetPostParams(offset = 0)) } returns flowOf(Success(mockResponse))
+            every { mockGetAllPosts(GetPostParams(offset = 0)) } returns flowOf(Result.success(mockResponse))
 
             // WHEN
             postListViewModel.loadContent(
@@ -200,7 +199,7 @@ internal class PostListViewModelTest : BaseViewModelTest() {
         fun `WHEN getAllPosts succeeds and offset is greater than 0 THEN repository will run SetNextPostPage`() =
             runTest {
                 // GIVEN
-                every { mockGetAllPosts(GetPostParams(offset = 1)) } returns flowOf(Success(mockResponse))
+                every { mockGetAllPosts(GetPostParams(offset = 1)) } returns flowOf(Result.success(mockResponse))
 
                 // WHEN
                 postListViewModel.loadContent(
@@ -367,6 +366,36 @@ internal class PostListViewModelTest : BaseViewModelTest() {
                 }
             }
 
+            @ParameterizedTest
+            @MethodSource("testCases")
+            fun `WHEN loadContent is called AND category is Archived THEN getAllPosts should be called`(
+                testCase: Pair<ShouldLoad, Int>,
+            ) = runTest {
+                // GIVEN
+                val (shouldLoad, expectedOffset) = testCase
+
+                // WHEN
+                postListViewModel.loadContent(
+                    createPostListContent(
+                        category = Archived,
+                        shouldLoad = shouldLoad,
+                        sortType = mockSortType,
+                    ),
+                )
+
+                // THEN
+                verify {
+                    mockGetAllPosts(
+                        GetPostParams(
+                            sorting = mockSortType,
+                            archived = true,
+                            offset = expectedOffset,
+                            forceRefresh = shouldLoad is ShouldForceLoad,
+                        ),
+                    )
+                }
+            }
+
             fun testCases(): List<Pair<ShouldLoad, Int>> = mutableListOf<Pair<ShouldLoad, Int>>().apply {
                 add(ShouldForceLoad to 0)
                 add(ShouldLoadFirstPage to 0)
@@ -420,7 +449,7 @@ internal class PostListViewModelTest : BaseViewModelTest() {
 
         @Test
         fun `WHEN getRecentPosts fails THEN repository won't run any actions`() = runTest {
-            every { mockGetRecentPosts(any()) } returns flowOf(Failure(mockException))
+            every { mockGetRecentPosts(any()) } returns flowOf(Result.failure(mockException))
 
             postListViewModel.loadContent(
                 createPostListContent(

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.posts.presentation
 
 import android.content.ActivityNotFoundException
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,7 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,10 +51,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import com.fibelatti.core.android.extension.shareText
-import com.fibelatti.core.functional.Failure
-import com.fibelatti.core.functional.Success
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.composable.ErrorHandlerEffect
+import com.fibelatti.pinboard.core.android.composable.LocalAppMessages
 import com.fibelatti.pinboard.core.android.icons.AppIcons
 import com.fibelatti.pinboard.core.android.icons.Browser
 import com.fibelatti.pinboard.core.android.icons.Mobile
@@ -65,15 +61,17 @@ import com.fibelatti.pinboard.core.extension.ScrollDirection
 import com.fibelatti.pinboard.core.extension.applySecureFlag
 import com.fibelatti.pinboard.core.extension.materialAlertDialogBuilder
 import com.fibelatti.pinboard.core.extension.rememberScrollDirection
-import com.fibelatti.pinboard.core.extension.showBanner
 import com.fibelatti.pinboard.features.appstate.EditPost
 import com.fibelatti.pinboard.features.appstate.PopularPostDetailContent
 import com.fibelatti.pinboard.features.appstate.PostDetailContent
 import com.fibelatti.pinboard.features.main.MainState
 import com.fibelatti.pinboard.features.main.MainViewModel
+import com.fibelatti.pinboard.features.offline.domain.model.OfflineCopy
+import com.fibelatti.pinboard.features.offline.presentation.OfflineCopyWebView
 import com.fibelatti.pinboard.features.posts.domain.model.Post
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
+import java.io.File
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -90,20 +88,16 @@ fun BookmarkDetailsScreen(
     ) {
         val appState by mainViewModel.appState.collectAsStateWithLifecycle()
 
-        val post by rememberUpdatedState(
-            newValue = when (val current = appState.content) {
-                is PostDetailContent -> current.post
-                is PopularPostDetailContent -> current.post
-                else -> return@Surface
-            },
-        )
-        val isConnected by rememberUpdatedState(
-            newValue = when (val current = appState.content) {
-                is PostDetailContent -> current.isConnected
-                is PopularPostDetailContent -> current.isConnected
-                else -> false
-            },
-        )
+        val post = when (val current = appState.content) {
+            is PostDetailContent -> current.post
+            is PopularPostDetailContent -> current.post
+            else -> return@Surface
+        }
+        val isConnected = when (val current = appState.content) {
+            is PostDetailContent -> current.isConnected
+            is PopularPostDetailContent -> current.isConnected
+            else -> false
+        }
 
         val postDetailsScreenState by postDetailViewModel.screenState.collectAsStateWithLifecycle()
         val popularPostsScreenState by popularPostsViewModel.screenState.collectAsStateWithLifecycle()
@@ -112,6 +106,7 @@ fun BookmarkDetailsScreen(
         }
 
         val localContext = LocalContext.current
+        val localUriHandler = LocalUriHandler.current
 
         LaunchedViewModelEffects()
 
@@ -119,8 +114,12 @@ fun BookmarkDetailsScreen(
             post = post,
             isLoading = isLoading,
             isConnected = isConnected,
+            offlineCopy = postDetailsScreenState.offlineCopy,
+            offlineCopyFile = postDetailsScreenState.offlineCopyFile,
+            viewingOfflineCopy = postDetailsScreenState.viewingOfflineCopy,
             onOpenInFileViewerClick = { openUrlInFileViewer(localContext, post) },
             onOpenInBrowserClick = { openUrlInExternalBrowser(localContext, post) },
+            onOfflineCopyLinkClick = localUriHandler::openUri,
             onScrollDirectionChange = mainViewModel::setCurrentScrollDirection,
         )
     }
@@ -187,7 +186,13 @@ private fun LaunchedMainViewModelEffect(
 
                     is MainState.MenuItemComponent.EditBookmark -> mainViewModel.runAction(EditPost(post))
 
+                    is MainState.MenuItemComponent.ToggleArchived -> postDetailViewModel.toggleArchived(post)
+
                     is MainState.MenuItemComponent.SaveBookmark -> popularPostsViewModel.saveLink(post)
+
+                    is MainState.MenuItemComponent.SaveOfflineCopy -> postDetailViewModel.saveOfflineCopy(post)
+
+                    is MainState.MenuItemComponent.ToggleOfflineCopy -> postDetailViewModel.toggleViewingOfflineCopy()
 
                     is MainState.MenuItemComponent.OpenInBrowser -> openUrlInExternalBrowser(localContext, post)
 
@@ -215,37 +220,44 @@ private fun LaunchedPostDetailViewModelEffect(
     val screenState by postDetailViewModel.screenState.collectAsStateWithLifecycle()
 
     val localContext = LocalContext.current
-    val localView = LocalView.current
+    val localAppMessages = LocalAppMessages.current
 
     SideEffect(screenState) {
         val current = screenState
         when {
-            current.deleted is Success<Boolean> && current.deleted.value -> {
-                localView.showBanner(R.string.posts_deleted_feedback)
+            current.deleted.getOrNull() == true -> {
+                localAppMessages.show(R.string.posts_deleted_feedback)
                 postDetailViewModel.userNotified()
             }
 
-            current.deleted is Failure -> {
+            current.deleted.isFailure -> {
                 localContext.materialAlertDialogBuilder().apply {
                     setMessage(R.string.posts_deleted_error)
                     setPositiveButton(R.string.hint_ok) { dialog, _ -> dialog?.dismiss() }
                 }.applySecureFlag().show()
             }
 
-            current.updated is Success<Boolean> && current.updated.value -> {
-                localView.showBanner(R.string.posts_marked_as_read_feedback)
+            current.updated.getOrNull() == true -> {
+                localAppMessages.show(R.string.posts_updated_feedback)
                 postDetailViewModel.userNotified()
                 mainViewModel.updateState { currentState ->
                     currentState.copy(actionButton = MainState.ActionButtonComponent.Gone)
                 }
             }
 
-            current.updated is Failure -> {
-                localView.showBanner(R.string.posts_marked_as_read_error)
+            current.updated.isFailure -> {
+                localAppMessages.show(R.string.posts_updated_error)
                 postDetailViewModel.userNotified()
             }
         }
     }
+
+    OfflineCopySaveEffect(
+        isSavingOfflineCopy = screenState.isSavingOfflineCopy,
+        offlineCopySaved = screenState.offlineCopySaved,
+        truncated = screenState.offlineCopy?.truncated == true,
+        handler = postDetailViewModel::userNotified,
+    )
 }
 
 @Composable
@@ -253,11 +265,11 @@ private fun LaunchedPopularPostsViewModelEffect(
     popularPostsViewModel: PopularPostsViewModel = hiltViewModel(),
 ) {
     val screenState by popularPostsViewModel.screenState.collectAsStateWithLifecycle()
-    val localView = LocalView.current
+    val localAppMessages = LocalAppMessages.current
 
     SideEffect(screenState) {
         screenState.savedMessage?.let { messageRes ->
-            localView.showBanner(messageRes)
+            localAppMessages.show(messageRes)
             popularPostsViewModel.userNotified()
         }
     }
@@ -299,12 +311,22 @@ fun BookmarkDetailsScreen(
     post: Post,
     isLoading: Boolean,
     isConnected: Boolean,
+    offlineCopy: OfflineCopy?,
+    offlineCopyFile: File?,
+    viewingOfflineCopy: Boolean,
     onOpenInFileViewerClick: () -> Unit,
     onOpenInBrowserClick: () -> Unit,
+    onOfflineCopyLinkClick: (String) -> Unit,
     onScrollDirectionChange: (ScrollDirection) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var webViewLoadFailed by remember { mutableStateOf(false) }
+    var webViewLoadFailed: Boolean by remember { mutableStateOf(false) }
+
+    // The saved copy is the better answer whenever the live page can't be reached, and the user
+    // can also ask for it explicitly while online.
+    val showOfflineCopy: Boolean = offlineCopy != null &&
+        offlineCopyFile != null &&
+        (viewingOfflineCopy || !isConnected || webViewLoadFailed)
 
     when {
         post.isFile() -> {
@@ -316,6 +338,16 @@ fun BookmarkDetailsScreen(
                 description = stringResource(id = R.string.posts_open_with_file_viewer_description),
                 buttonText = stringResource(id = R.string.posts_open_with_file_viewer),
                 modifier = modifier,
+            )
+        }
+
+        showOfflineCopy -> {
+            OfflineCopyWebView(
+                offlineCopy = offlineCopy,
+                file = offlineCopyFile,
+                onExternalLinkClick = onOfflineCopyLinkClick,
+                onScrollDirectionChange = onScrollDirectionChange,
+                modifier = modifier.fillMaxSize(),
             )
         }
 
@@ -339,77 +371,94 @@ fun BookmarkDetailsScreen(
         }
 
         else -> {
-            Box(
+            LiveBookmarkWebView(
+                post = post,
+                isLoading = isLoading,
+                onLoadFailedChange = { failed -> webViewLoadFailed = failed },
+                onScrollDirectionChange = onScrollDirectionChange,
                 modifier = modifier.fillMaxSize(),
-            ) {
-                var webViewLoading by remember { mutableStateOf(true) }
+            )
+        }
+    }
+}
 
-                val localContext = LocalContext.current
-                val webView: WebView = remember(localContext) {
-                    WebView(localContext).apply {
-                        webViewClient = object : WebViewClient() {
+@Composable
+private fun LiveBookmarkWebView(
+    post: Post,
+    isLoading: Boolean,
+    onLoadFailedChange: (Boolean) -> Unit,
+    onScrollDirectionChange: (ScrollDirection) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        var webViewLoading: Boolean by remember { mutableStateOf(true) }
 
-                            override fun onPageFinished(view: WebView?, url: String?) {
-                                webViewLoading = false
-                                webViewLoadFailed = false
-                            }
+        val currentOnLoadFailedChange: (Boolean) -> Unit by rememberUpdatedState(onLoadFailedChange)
 
-                            override fun onReceivedError(
-                                view: WebView?,
-                                request: WebResourceRequest?,
-                                error: WebResourceError?,
-                            ) {
-                                webViewLoadFailed = true
-                            }
-                        }
+        val localContext = LocalContext.current
+        val webView: WebView = remember(localContext) {
+            WebView(localContext).apply {
+                webViewClient = object : WebViewClient() {
+
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        webViewLoading = false
+                        currentOnLoadFailedChange(false)
                     }
-                }
 
-                val nestedScrollDirection by rememberScrollDirection(webView)
-                val currentOnScrollDirectionChanged by rememberUpdatedState(onScrollDirectionChange)
-
-                SideEffect(nestedScrollDirection) {
-                    currentOnScrollDirectionChanged(nestedScrollDirection)
-                }
-
-                SideEffect(post.id) {
-                    webView.loadUrl(post.url)
-                    webViewLoading = true
-                }
-
-                DisposableEffect(webView) {
-                    onDispose {
-                        webView.stopLoading()
-                        webView.destroy()
-                    }
-                }
-
-                AndroidView(
-                    factory = { webView },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(color = ExtendedTheme.colors.backgroundNoOverlay),
-                )
-
-                AnimatedVisibility(
-                    visible = isLoading || webViewLoading,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = ExtendedTheme.colors.backgroundNoOverlay),
-                        contentAlignment = Alignment.Center,
+                    override fun onReceivedError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        error: WebResourceError?,
                     ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .align(Alignment.Center),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        currentOnLoadFailedChange(true)
                     }
                 }
+            }
+        }
+
+        val nestedScrollDirection by rememberScrollDirection(webView)
+        val currentOnScrollDirectionChanged by rememberUpdatedState(onScrollDirectionChange)
+
+        SideEffect(nestedScrollDirection) {
+            currentOnScrollDirectionChanged(nestedScrollDirection)
+        }
+
+        SideEffect(post.id) {
+            webView.loadUrl(post.url)
+            webViewLoading = true
+        }
+
+        DisposableEffect(webView) {
+            onDispose {
+                webView.stopLoading()
+                webView.destroy()
+            }
+        }
+
+        AndroidView(
+            factory = { webView },
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = ExtendedTheme.colors.backgroundNoOverlay),
+        )
+
+        AnimatedVisibility(
+            visible = isLoading || webViewLoading,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = ExtendedTheme.colors.backgroundNoOverlay),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
         }
     }
@@ -429,7 +478,7 @@ private fun BookmarkPlaceholder(
         modifier = modifier
             .fillMaxSize()
             .background(color = ExtendedTheme.colors.backgroundNoOverlay)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

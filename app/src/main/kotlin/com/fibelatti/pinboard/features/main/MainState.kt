@@ -4,18 +4,22 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Archive
 import com.fibelatti.pinboard.core.android.icons.BackArrow
 import com.fibelatti.pinboard.core.android.icons.Browser
 import com.fibelatti.pinboard.core.android.icons.ClearFilter
 import com.fibelatti.pinboard.core.android.icons.Close
 import com.fibelatti.pinboard.core.android.icons.Delete
+import com.fibelatti.pinboard.core.android.icons.Download
 import com.fibelatti.pinboard.core.android.icons.Edit
 import com.fibelatti.pinboard.core.android.icons.Random
 import com.fibelatti.pinboard.core.android.icons.Save
 import com.fibelatti.pinboard.core.android.icons.Search
 import com.fibelatti.pinboard.core.android.icons.Share
 import com.fibelatti.pinboard.core.android.icons.Sort
+import com.fibelatti.pinboard.core.android.icons.SwitchHorizontal
 import com.fibelatti.pinboard.core.android.icons.Sync
+import com.fibelatti.pinboard.core.android.icons.Unarchive
 import com.fibelatti.pinboard.core.extension.ScrollDirection
 import com.fibelatti.pinboard.features.appstate.Content
 import kotlin.reflect.KClass
@@ -108,6 +112,11 @@ data class MainState(
             icon = AppIcons.Edit,
         )
 
+        class ToggleArchived(isArchived: Boolean) : MenuItemComponent(
+            name = if (isArchived) R.string.menu_link_unarchive else R.string.menu_link_archive,
+            icon = if (isArchived) AppIcons.Unarchive else AppIcons.Archive,
+        )
+
         data object OpenInBrowser : MenuItemComponent(
             name = R.string.menu_link_open_in_browser,
             icon = AppIcons.Browser,
@@ -116,6 +125,21 @@ data class MainState(
         data object SaveBookmark : MenuItemComponent(
             name = R.string.menu_link_save,
             icon = AppIcons.Save,
+        )
+
+        data object SaveOfflineCopy : MenuItemComponent(
+            name = R.string.menu_link_save_offline_copy,
+            icon = AppIcons.Download,
+        )
+
+        data object RemoveOfflineCopy : MenuItemComponent(
+            name = R.string.offline_copies_delete,
+            icon = AppIcons.Delete,
+        )
+
+        data object ToggleOfflineCopy : MenuItemComponent(
+            name = R.string.menu_link_toggle_offline_copy,
+            icon = AppIcons.SwitchHorizontal,
         )
 
         data object SearchBookmarks : MenuItemComponent(
@@ -178,3 +202,9 @@ data class MainState(
 }
 
 typealias ContentType = KClass<out Content>
+
+/**
+ * Whether any of [bottomAppBar] or [sidePanelAppBar] components are currently visible.
+ */
+fun MainState.isBottomBarVisible(): Boolean = bottomAppBar is MainState.BottomAppBarComponent.Visible ||
+    sidePanelAppBar is MainState.SidePanelAppBarComponent.Visible

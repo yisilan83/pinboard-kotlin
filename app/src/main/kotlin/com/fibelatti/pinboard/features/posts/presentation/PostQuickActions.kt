@@ -3,10 +3,13 @@ package com.fibelatti.pinboard.features.posts.presentation
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.fibelatti.pinboard.R
+import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.android.icons.AppIcons
+import com.fibelatti.pinboard.core.android.icons.Archive
 import com.fibelatti.pinboard.core.android.icons.Browser
 import com.fibelatti.pinboard.core.android.icons.Copy
 import com.fibelatti.pinboard.core.android.icons.Delete
+import com.fibelatti.pinboard.core.android.icons.Download
 import com.fibelatti.pinboard.core.android.icons.Edit
 import com.fibelatti.pinboard.core.android.icons.Expand
 import com.fibelatti.pinboard.core.android.icons.ReadLater
@@ -14,6 +17,7 @@ import com.fibelatti.pinboard.core.android.icons.Search
 import com.fibelatti.pinboard.core.android.icons.Send
 import com.fibelatti.pinboard.core.android.icons.Share
 import com.fibelatti.pinboard.core.android.icons.Tag
+import com.fibelatti.pinboard.core.android.icons.Unarchive
 import com.fibelatti.pinboard.features.posts.domain.model.Post
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 
@@ -79,6 +83,26 @@ sealed class PostQuickActions(
     ) {
 
         override val serializedName: String = "DELETE"
+    }
+
+    data class ToggleArchived(
+        override val post: Post,
+    ) : PostQuickActions(
+        title = if (post.isArchived == true) R.string.quick_actions_unarchive else R.string.quick_actions_archive,
+        icon = if (post.isArchived == true) AppIcons.Unarchive else AppIcons.Archive,
+    ) {
+
+        override val serializedName: String = "TOGGLE_ARCHIVED"
+    }
+
+    data class SaveOfflineCopy(
+        override val post: Post,
+    ) : PostQuickActions(
+        title = R.string.quick_actions_save_offline_copy,
+        icon = AppIcons.Download,
+    ) {
+
+        override val serializedName: String = "SAVE_OFFLINE_COPY"
     }
 
     data class CopyUrl(
@@ -165,6 +189,7 @@ sealed class PostQuickActions(
 
         fun allOptions(
             post: Post,
+            appMode: AppMode,
             tagsClipboard: List<Tag> = emptyList(),
         ): List<PostQuickActions> = buildList {
             if (post.displayDescription.isNotBlank()) {
@@ -182,7 +207,16 @@ sealed class PostQuickActions(
             }
 
             add(Edit(post))
+
+            if (AppMode.LINKDING == appMode) {
+                add(ToggleArchived(post))
+            }
+
             add(Delete(post))
+
+            if (!post.isFile()) {
+                add(SaveOfflineCopy(post))
+            }
 
             add(CopyUrl(post))
             add(Share(post))

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
-
 package com.fibelatti.pinboard.features.notes.presentation
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -21,7 +19,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -55,9 +51,11 @@ import com.fibelatti.pinboard.features.appstate.NoteListContent
 import com.fibelatti.pinboard.features.appstate.RefreshNotes
 import com.fibelatti.pinboard.features.appstate.ViewNote
 import com.fibelatti.pinboard.features.appstate.find
+import com.fibelatti.pinboard.features.main.MainBottomAppBar
 import com.fibelatti.pinboard.features.notes.domain.model.Note
 import com.fibelatti.pinboard.features.notes.domain.model.NoteSorting
 import com.fibelatti.ui.components.AutoSizeText
+import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
 
@@ -71,9 +69,7 @@ fun NoteListScreen(
         color = ExtendedTheme.colors.backgroundNoOverlay,
     ) {
         val appState by noteListViewModel.appState.collectAsStateWithLifecycle()
-        val noteListContent by rememberUpdatedState(
-            newValue = appState.content.find<NoteListContent>() ?: return@Surface,
-        )
+        val noteListContent = appState.content.find<NoteListContent>() ?: return@Surface
 
         val error by noteListViewModel.error.collectAsStateWithLifecycle()
         ErrorHandlerEffect(error = error, handler = noteListViewModel::errorHandled)
@@ -155,10 +151,10 @@ private fun NoteListContent(
                     ) {
                         AutoSizeText(
                             text = stringResource(id = sorting.label),
-                            style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
+                            style = MaterialTheme.typography.bodySmall,
                         )
                     }
                 }
@@ -166,7 +162,7 @@ private fun NoteListContent(
 
             val listWindowInsets = WindowInsets.safeDrawing
                 .only(if (sidePanelVisible) WindowInsetsSides.Start else WindowInsetsSides.Horizontal)
-                .add(WindowInsets(top = 16.dp, bottom = 100.dp))
+                .add(WindowInsets(top = 8.dp, bottom = MainBottomAppBar.ContentClearance))
 
             PullRefreshLayout(
                 onPullToRefresh = onPullToRefresh,
@@ -195,13 +191,13 @@ private fun NoteListItem(
             .heightIn(min = 60.dp)
             .padding(horizontal = 8.dp)
             .clickable { onNoteClick(note) },
-        shape = MaterialTheme.shapes.small,
+        shape = Shapes.StandaloneShape,
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
+                .padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp, alignment = Alignment.CenterVertically),
         ) {
             Text(

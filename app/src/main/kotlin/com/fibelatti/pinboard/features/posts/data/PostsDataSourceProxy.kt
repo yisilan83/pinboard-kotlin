@@ -1,6 +1,5 @@
 package com.fibelatti.pinboard.features.posts.data
 
-import com.fibelatti.core.functional.Result
 import com.fibelatti.pinboard.core.AppMode
 import com.fibelatti.pinboard.core.AppModeProvider
 import com.fibelatti.pinboard.features.appstate.SortType
@@ -33,7 +32,7 @@ internal class PostsDataSourceProxy @Inject constructor(
         get() = runBlocking {
             val appMode = appModeProvider.appMode.first { AppMode.UNSET != it }
 
-            Timber.d("Getting repository (appMode=$appMode)")
+            Timber.d("Getting repository %s", mapOf("appMode" to appMode))
 
             currentRepository?.takeIf { currentAppMode == appMode }
                 ?: when (appMode) {
@@ -42,7 +41,7 @@ internal class PostsDataSourceProxy @Inject constructor(
                     AppMode.LINKDING -> postsDataSourceLinkdingApi.get()
                     AppMode.UNSET -> throw IllegalStateException()
                 }.also {
-                    Timber.d("Setting repository (appMode=$appMode)")
+                    Timber.d("Setting repository %s", mapOf("appMode" to appMode))
                     currentAppMode = appMode
                     currentRepository = it
                 }
@@ -54,6 +53,10 @@ internal class PostsDataSourceProxy @Inject constructor(
 
     override suspend fun delete(post: Post): Result<Unit> = repository.delete(post = post)
 
+    override suspend fun archive(post: Post): Result<Post> = repository.archive(post = post)
+
+    override suspend fun unarchive(post: Post): Result<Post> = repository.unarchive(post = post)
+
     override fun getAllPosts(
         sortType: SortType,
         searchTerm: String,
@@ -63,6 +66,7 @@ internal class PostsDataSourceProxy @Inject constructor(
         untaggedOnly: Boolean,
         postVisibility: PostVisibility,
         readLaterOnly: Boolean,
+        archivedOnly: Boolean,
         countLimit: Int,
         pageLimit: Int,
         pageOffset: Int,
@@ -76,6 +80,7 @@ internal class PostsDataSourceProxy @Inject constructor(
         untaggedOnly = untaggedOnly,
         postVisibility = postVisibility,
         readLaterOnly = readLaterOnly,
+        archivedOnly = archivedOnly,
         countLimit = countLimit,
         pageLimit = pageLimit,
         pageOffset = pageOffset,
