@@ -4,12 +4,18 @@
     <string name="hint_ok">确定</string>
     <string name="hint_yes">是</string>
     <string name="hint_no">否</string>
+    <string name="hint_cancel">取消</string>
+    <string name="hint_open_settings">打开设置</string>
     <string name="hint_save">保存</string>
     <string name="hint_help">帮助</string>
     <string name="hint_mark_as_read">标记为已读</string>
     <string name="hint_add">添加</string>
 
     <string name="alert_confirm_deletion">确定要删除此书签吗？</string>
+    <string name="alert_confirm_deletion_offline_copy">确定要删除此离线副本吗？</string>
+    <plurals name="alert_confirm_deletion_offline_copies">
+        <item quantity="other">这将从此设备删除 %d 个已保存页面。书签保留，但离线阅读需要重新保存。继续？</item>
+    </plurals>
     <string name="alert_confirm_unsaved_changes">您有未保存的更改，继续不保存吗？</string>
 
     <string name="server_error">无法连接到服务。请检查您的授权令牌或稍后重试。</string>
@@ -30,9 +36,11 @@
     <string name="menu_navigation_private">私有</string>
     <string name="menu_navigation_unread">待读</string>
     <string name="menu_navigation_untagged">未标记</string>
+    <string name="menu_navigation_archived">已归档</string>
     <string name="menu_navigation_tags">标签</string>
     <string name="menu_navigation_saved_filters">已保存的筛选器</string>
     <string name="menu_navigation_notes">笔记</string>
+    <string name="menu_navigation_offline_copies">离线副本</string>
     <string name="menu_navigation_popular">热门</string>
 
     <string name="menu_navigation_preferences">偏好设置</string>
@@ -41,9 +49,13 @@
 
     <string name="menu_link_delete">移除书签</string>
     <string name="menu_link_edit">编辑书签</string>
+    <string name="menu_link_archive">归档书签</string>
+    <string name="menu_link_unarchive">取消归档</string>
     <string name="menu_link_save">保存书签</string>
     <string name="menu_link_share">分享书签</string>
     <string name="menu_link_open_in_browser">在浏览器中打开</string>
+    <string name="menu_link_save_offline_copy">保存离线副本</string>
+    <string name="menu_link_toggle_offline_copy">切换离线/在线页面</string>
 
     <string name="menu_search_clear">清除筛选</string>
     <string name="menu_search_save">保存筛选</string>
@@ -68,6 +80,8 @@
     <string name="auth_linkding_description"><![CDATA[<a href="https://github.com/sissbruecker/linkding/tree/master">Linkding</a> 是一个自托管的书签管理器。使用 Pinkt for Linkding 时，您必须提供实例 URL 和令牌，令牌可以在设置页面的集成选项卡中找到。]]></string>
 
     <string name="auth_linkding_unreachable_instance_url">无法连接到服务器。地址必须包含协议并且可公开访问。</string>
+    <string name="auth_linkding_missing_local_network_permission">访问自托管实例需要本地网络权限。请授予权限以继续。</string>
+    <string name="auth_linkding_missing_local_network_permission_settings">通过设置应用授予本地网络访问权限以访问自托管实例。</string>
 
     <string name="auth_linkding_client_certificate">客户端证书（可选）：%s</string>
     <string name="auth_linkding_client_certificate_none">无</string>
@@ -81,6 +95,7 @@
     <string name="posts_title_private">私有书签</string>
     <string name="posts_title_unread">待读书签</string>
     <string name="posts_title_untagged">未标记书签</string>
+    <string name="posts_title_archived">已归档书签</string>
 
     <plurals name="posts_quantity">
         <item quantity="other">%s 项</item>
@@ -101,8 +116,8 @@
     <string name="posts_deleted_feedback">书签已成功移除</string>
     <string name="posts_deleted_error">发生错误，书签未被移除。如果问题持续存在，请使用网页客户端删除。</string>
 
-    <string name="posts_marked_as_read_feedback">待读标记已成功更新</string>
-    <string name="posts_marked_as_read_error">更新待读标记失败。请重试。</string>
+    <string name="posts_updated_feedback">书签已更新成功</string>
+    <string name="posts_updated_error">更新书签失败。请重试。</string>
 
     <string name="posts_add_title">保存书签</string>
     <string name="posts_add_url">URL</string>
@@ -125,12 +140,36 @@
     <string name="posts_url_error">无法使用内置浏览器查看此书签。请使用默认浏览器。</string>
     <string name="posts_open_in_browser">打开外部浏览器</string>
 
+    <string name="offline_copies_title">离线副本</string>
+    <string name="offline_copies_empty_title">暂无离线副本</string>
+    <string name="offline_copies_empty_description">保存书签的离线副本后，它将显示在这里，无需网络即可阅读。</string>
+    <string name="offline_copies_total_size">已使用 %s</string>
+    <string name="offline_copies_delete">删除离线副本</string>
+    <string name="offline_copies_deleted">离线副本已删除</string>
+    <string name="offline_copies_bulk_delete">批量删除</string>
+    <string name="offline_copies_bulk_delete_action">删除（%d）</string>
+    <string name="offline_copies_bulk_deleted">离线副本已删除</string>
+    <string name="offline_copies_open_original">打开原始页面</string>
+    <plurals name="offline_copies_quantity">
+        <item quantity="other">%d 份副本</item>
+    </plurals>
+
+    <string name="posts_offline_copy_saving">正在保存离线副本…</string>
+    <string name="posts_offline_copy_saved">离线副本已保存</string>
+    <string name="posts_offline_copy_saved_truncated">离线副本已保存。部分图片过大被省略。</string>
+    <string name="posts_offline_copy_failed">无法保存此页面的离线副本</string>
+    <string name="posts_offline_copy_unreadable">此页面没有足够的可读文本以供保存副本</string>
+
     <string name="posts_pending_add">待添加</string>
     <string name="posts_pending_add_expanded">网络可用时将添加此书签</string>
     <string name="posts_pending_update">待更新</string>
     <string name="posts_pending_update_expanded">网络可用时将更新此书签</string>
     <string name="posts_pending_delete">待删除</string>
     <string name="posts_pending_delete_expanded">网络可用时将删除此书签</string>
+    <string name="posts_pending_archive">待归档</string>
+    <string name="posts_pending_archive_expanded">网络可用时将归档此书签</string>
+    <string name="posts_pending_unarchive">待取消归档</string>
+    <string name="posts_pending_unarchive_expanded">网络可用时将取消归档此书签</string>
 
     <!-- Offline -->
     <string name="offline_alert">无网络连接</string>
@@ -223,8 +262,11 @@
     <string name="quick_actions_paste_tags">粘贴标签</string>
     <string name="quick_actions_edit">编辑书签</string>
     <string name="quick_actions_delete">删除书签</string>
+    <string name="quick_actions_archive">归档书签</string>
+    <string name="quick_actions_unarchive">取消归档</string>
     <string name="quick_actions_delete_filter">删除筛选器</string>
     <string name="quick_actions_save">保存到我的</string>
+    <string name="quick_actions_save_offline_copy">保存离线副本</string>
     <string name="quick_actions_copy_url">复制 URL</string>
     <string name="quick_actions_share">分享书签</string>
     <string name="quick_actions_expand_description">展开描述</string>
@@ -324,6 +366,11 @@
     <string name="user_preferences_edit_after_sharing_before_saving">保存前</string>
     <string name="user_preferences_edit_after_sharing_after_saving">保存后</string>
     <string name="user_preferences_edit_after_sharing_description">控制选择"保存书签"分享操作后何时显示书签编辑器。要跳过编辑器，请改为选择"快速保存书签"。</string>
+    <string name="user_preferences_offline_copies">离线副本</string>
+    <string name="user_preferences_offline_copies_description">已保存页面当前占用此设备 %s 的存储空间。</string>
+    <string name="user_preferences_offline_copies_clear">删除所有离线副本</string>
+    <string name="user_preferences_offline_copies_clear_confirmation">这将删除此设备上的所有已保存页面。书签保留，但离线阅读需要重新保存。继续？</string>
+
     <string name="user_preferences_bookmark_quick_options">书签快速操作</string>
     <string name="user_preferences_bookmark_quick_actions_description">自定义打开快速操作菜单时立即可见的选项</string>
 
@@ -358,9 +405,7 @@
 
     <!-- Error -->
     <string name="error_send_email">发送邮件</string>
-    <string name="error_report_rationale">看起来出了点问题。
-
-您可以通过邮件报告此错误，这有助于我诊断和修复问题。</string>
+    <string name="error_report_rationale">看起来出了点问题。\n\n您可以通过邮件报告此错误，这有助于我诊断和修复问题。</string>
     <string name="error_report">报告</string>
     <string name="error_ignore">忽略</string>
     <string name="error_report_email_subject">Pinkt (%s) — 错误报告</string>
@@ -373,4 +418,5 @@
     <string name="cd_share_receiver_image">正在保存您的书签</string>
     <string name="cd_menu">菜单</string>
     <string name="cd_scroll_to_top">滚动到顶部</string>
+    <string name="cd_dismiss_message">关闭</string>
 </resources>
