@@ -291,13 +291,11 @@
     <string name="account_switcher_logout">退出登录</string>
     <string name="account_switcher_add_pinboard">添加 Pinboard 账户</string>
     <string name="account_switcher_add_linkding">添加 Linkding 账户</string>
-    <string name="account_switcher_app_review_mode_title">应用审核模式</string>
-    <string name="account_switcher_app_review_mode_description">书签仅保存在本地，退出登录后将被删除。</string>
 
     <!-- Export -->
+    <string name="export_select_service">选择要从中导出的服务</string>
     <string name="export_feedback_success">书签导出成功！</string>
     <string name="export_feedback_failure">导出书签失败</string>
-    <string name="export_html_title">书签</string>
 
     <!-- User Preferences -->
     <string name="user_preferences_title">偏好设置</string>
@@ -408,10 +406,6 @@
     <string name="error_report_rationale">看起来出了点问题。\n\n您可以通过邮件报告此错误，这有助于我诊断和修复问题。</string>
     <string name="error_report">报告</string>
     <string name="error_ignore">忽略</string>
-    <string name="error_report_email_subject">Pinkt (%s) — 错误报告</string>
-    <string name="error_report_email_android_version" formatted="false">Android 版本：%s（SDK %d）</string>
-    <string name="error_report_email_current_service">当前服务：%s</string>
-    <string name="error_report_email_body_intro">我刚才遇到了此错误：</string>
 
     <!-- Content Descriptions -->
     <string name="cd_navigate_back">返回</string>
