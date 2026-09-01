@@ -34,24 +34,55 @@ jobs:
         id: check_release
         run: |
           LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v?[0-9]' | head -1 || echo "none")
-          UPSTREAM_LATEST_TAG=$(git ls-remote --tags --refs upstream 'refs/tags/*' | sort -t/ -k3 -V | tail -1 | awk '{print $2}' | sed 's|refs/tags/||')
+          UPSTREAM_LATEST_TAG=$(git ls-remote --tags --refs upstream 'refs/tags/*' | grep -v '\-zh' | sort -t/ -k3 -V | tail -1 | awk '{print $2}' | sed 's|refs/tags/||')
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
           echo "upstream_tag=$UPSTREAM_LATEST_TAG" >> $GITHUB_OUTPUT
           echo "Current latest: $LATEST_TAG, Upstream latest: $UPSTREAM_LATEST_TAG"
 
       - name: Merge upstream main
+        id: merge
         run: |
-          git merge upstream/main --allow-unrelated-histories -m "Sync: merge upstream/main" || true
+          if git merge upstream/main -X theirs --no-edit; then
+            echo "merged=true" >> $GITHUB_OUTPUT
+          else
+            git merge --abort
+            echo "merged=false" >> $GITHUB_OUTPUT
+            echo "Merge conflict, keeping fork version"
+          fi
+
+      - name: Re-apply fork patches
+        if: steps.merge.outputs.merged == 'true'
+        run: |
+          # -zh suffix in APK name
+          sed -i 's|base.archivesName = "$applicationId-v$versionName-$versionCode"|base.archivesName = "$applicationId-v$versionName-zh-$versionCode"|' app/build.gradle.kts
+          # zh locale
+          sed -i 's|localeFilters.addAll(listOf("en", "de", "fr", "es"))|localeFilters.addAll(listOf("en", "de", "fr", "es", "zh"))|' app/build.gradle.kts
+          # printReleaseVersionName task (used by signed-build workflow)
+          cat >> app/build.gradle.kts << 'EOF'
+
+/**
+ * Prints the current version name. Used for GitHub releases.
+ */
+@Suppress("unused")
+val printReleaseVersionName by tasks.registering {
+    doLast {
+        println(AppInfo.versionName)
+    }
+}
+EOF
+          git add -A
+          git commit -m "Re-apply fork patches: -zh APK name, zh locale, version name task" || echo "Nothing to patch"
 
       - name: Push changes
+        if: steps.merge.outputs.merged == 'true'
         run: |
           git push origin main
 
       - name: Create tag for upstream release
-        if: steps.check_release.outputs.upstream_tag != '' && steps.check_release.outputs.upstream_tag != steps.check_release.outputs.latest_tag
+        if: steps.merge.outputs.merged == 'true' && steps.check_release.outputs.upstream_tag != '' && steps.check_release.outputs.upstream_tag != steps.check_release.outputs.latest_tag
         run: |
-          git tag "${{ steps.check_release.outputs.upstream_tag }}"
-          git push origin "${{ steps.check_release.outputs.upstream_tag }}"
+          git tag "${{ steps.check_release.outputs.upstream_tag }}-zh"
+          git push origin "${{ steps.check_release.outputs.upstream_tag }}-zh"
 
   build-signed-apk:
     name: Build Signed APK
