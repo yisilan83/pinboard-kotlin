@@ -1,8 +1,8 @@
 [versions]
 agp = "9.3.2"
-composeMaterial3 = "1.5.0-alpha26"
-composeRuntime = "1.13.0-alpha01"
-composeUi = "1.13.0-alpha01"
+composeMaterial3 = "1.5.0-alpha27"
+composeRuntime = "1.13.0-alpha02"
+composeUi = "1.13.0-alpha02"
 coroutines = "1.11.0"
 hilt = "2.60.1"
 hiltExtensions = "1.4.0"
@@ -12,17 +12,16 @@ activity = "1.13.0"
 lifecycle = "2.11.0"
 okhttp = "5.5.0"
 room = "2.8.4"
-coil = "3.5.0"
-spotless = "8.10.0"
-aboutLibraries = "15.1.1"
+coil = "3.6.0"
+spotless = "8.10.1"
+aboutLibraries = "15.2.0"
 
 [libraries]
-kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
 kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.11.0" }
 kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.8.0" }
-kotlin-html = { module = "org.jetbrains.kotlinx:kotlinx-html-jvm", version = "0.12.0" }
+kotlin-html = { module = "org.jetbrains.kotlinx:kotlinx-html", version = "0.12.0" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -66,7 +65,7 @@ hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltExtensions"
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 coil-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-jsoup = { module = "org.jsoup:jsoup", version = "1.23.1" }
+jsoup = { module = "org.jsoup:jsoup", version = "1.23.2" }
 readability4j = { module = "net.dankito.readability4j:readability4j", version = "1.0.8" }
 
 about-libraries = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
@@ -122,7 +121,6 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version = "2.3.11" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

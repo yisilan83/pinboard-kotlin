@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.fibelatti.android.application)
     alias(libs.plugins.fibelatti.manifest.permission.validation)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
@@ -18,8 +17,8 @@ object AppInfo {
     const val APPLICATION_ID = "com.fibelatti.pinboard"
 
     private const val VERSION_MAJOR = 3
-    private const val VERSION_MINOR = 18
-    private const val VERSION_PATCH = 2
+    private const val VERSION_MINOR = 19
+    private const val VERSION_PATCH = 0
     private const val VERSION_BUILD = 0
 
     val versionCode: Int = (VERSION_MAJOR * 1_000_000 + VERSION_MINOR * 10_000 + VERSION_PATCH * 100 + VERSION_BUILD)
@@ -238,7 +237,6 @@ dependencies {
     debugImplementation(libs.leakcanary)
 
     // Test
-    testFixturesImplementation(libs.kotlin)
     testFixturesImplementation(libs.compose.runtime)
 
     testImplementation(platform(libs.junit6.bom))

@@ -1,10 +1,8 @@
 package com.fibelatti.pinboard.features.export
 
 import android.content.Context
-import com.fibelatti.core.functional.UseCase
-import com.fibelatti.pinboard.R
+import com.fibelatti.core.functional.UseCaseWithParams
 import com.fibelatti.pinboard.core.AppMode
-import com.fibelatti.pinboard.core.AppModeProvider
 import com.fibelatti.pinboard.core.util.DateFormatter
 import com.fibelatti.pinboard.features.linkding.data.BookmarkLocalMapper
 import com.fibelatti.pinboard.features.linkding.data.BookmarksDao
@@ -13,14 +11,16 @@ import com.fibelatti.pinboard.features.posts.data.model.PostDtoMapper
 import com.fibelatti.pinboard.features.posts.domain.model.Post
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
-import java.io.StringWriter
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
+import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.html.DL
 import kotlinx.html.a
 import kotlinx.html.body
@@ -32,27 +32,35 @@ import kotlinx.html.head
 import kotlinx.html.html
 import kotlinx.html.meta
 import kotlinx.html.p
-import kotlinx.html.stream.appendHTML
+import kotlinx.html.stream.createHTML
 import kotlinx.html.title
 import timber.log.Timber
 
 class ExportBookmarksUseCase @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val appModeProvider: AppModeProvider,
+    @ApplicationContext context: Context,
     private val postDao: PostsDao,
     private val postDtoMapper: PostDtoMapper,
     private val bookmarksDao: BookmarksDao,
     private val bookmarksMapper: BookmarkLocalMapper,
     private val dateFormatter: DateFormatter,
-) : UseCase<File?> {
+) : UseCaseWithParams<AppMode, File?> {
 
     private val parentDir: File = context.cacheDir
 
-    override suspend fun invoke(): File? = try {
+    private val fileNameFormat: DateTimeFormat<LocalDateTime> = LocalDateTime.Format {
+        year()
+        monthNumber()
+        day()
+        char(value = '_')
+        hour()
+        minute()
+    }
+
+    override suspend fun invoke(params: AppMode): File? = try {
         withContext(Dispatchers.Default) {
             Timber.d("Loading bookmarks to export...")
 
-            val posts: List<Post> = getPosts()
+            val posts: List<Post> = getPosts(appMode = params)
             Timber.d("${posts.size} bookmarks found.")
 
             if (posts.isNotEmpty()) {
@@ -69,21 +77,22 @@ class ExportBookmarksUseCase @Inject constructor(
         null
     }
 
-    private suspend fun getPosts(): List<Post> {
-        val appMode: AppMode = appModeProvider.appMode.value
+    private suspend fun getPosts(appMode: AppMode): List<Post> {
         Timber.d("App mode: $appMode")
 
-        return if (appMode == AppMode.PINBOARD) {
-            postDao.getAllPosts().let(postDtoMapper::mapList)
-        } else {
-            bookmarksDao.getAllBookmarks().let(bookmarksMapper::mapList)
+        return when (appMode) {
+            AppMode.UNSET -> emptyList()
+            AppMode.NO_API, AppMode.PINBOARD -> postDao.getAllPosts().let(postDtoMapper::mapList)
+            AppMode.LINKDING -> bookmarksDao.getAllBookmarks().let(bookmarksMapper::mapList)
         }
     }
 
     private suspend fun createExportFile(): File = withContext(Dispatchers.IO) {
         Timber.d("Creating export file...")
 
-        val timestamp: String = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
+        val timestamp: String = fileNameFormat.format(
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        )
         val file: File = File("$parentDir/bookmarks_$timestamp.html").apply {
             if (exists()) delete()
             createNewFile()
@@ -93,36 +102,37 @@ class ExportBookmarksUseCase @Inject constructor(
     }
 
     private suspend fun exportBookmarks(file: File, posts: List<Post>) {
-        val sw = StringWriter()
-        val title = context.getString(R.string.export_html_title)
-
-        sw.appendLine("<!DOCTYPE netscape-bookmark-file-1>")
-        sw.appendHTML().html {
-            head {
-                meta {
-                    httpEquiv = "Content-Type"
-                    content = "text/html; charset=UTF-8"
-                }
-                title(title)
-            }
-            body {
-                h1 {
-                    text(title)
-                }
-                dl {
-                    p()
-
-                    for (item: Post in posts) {
-                        writePostToHtml(item)
+        val content: String = buildString {
+            appendLine("<!DOCTYPE netscape-bookmark-file-1>")
+            append(
+                createHTML().html {
+                    head {
+                        meta {
+                            httpEquiv = "Content-Type"
+                            content = "text/html; charset=UTF-8"
+                        }
+                        title("Bookmarks")
                     }
-                }
+                    body {
+                        h1 {
+                            text("Bookmarks")
+                        }
+                        dl {
+                            p()
 
-                p()
-            }
+                            for (item: Post in posts) {
+                                writePostToHtml(item)
+                            }
+                        }
+
+                        p()
+                    }
+                },
+            )
         }
 
         withContext(Dispatchers.IO) {
-            file.writeText(sw.toString())
+            file.writeText(content)
         }
     }
 

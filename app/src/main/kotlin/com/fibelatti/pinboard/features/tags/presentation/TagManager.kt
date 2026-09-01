@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilledTonalButton
@@ -15,7 +17,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -29,15 +36,25 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.fibelatti.pinboard.R
 import com.fibelatti.pinboard.core.extension.fillWidthOfParent
+import com.fibelatti.pinboard.features.tags.domain.TagManagerState
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import com.fibelatti.ui.components.ChipGroup
 import com.fibelatti.ui.components.MultilineChipGroup
 import com.fibelatti.ui.components.SingleLineChipGroup
 import com.fibelatti.ui.foundation.Shapes
+import com.fibelatti.ui.foundation.rememberKeyboardState
 import com.fibelatti.ui.icons.Close
 import com.fibelatti.ui.icons.UiIcons
 import com.fibelatti.ui.preview.PreviewAll
 import com.fibelatti.ui.theme.ExtendedTheme
+
+/**
+ * Title of the section listing the tags currently added, which reflects whether there are any.
+ */
+val TagManagerState.displayTitle: String
+    @Composable
+    @ReadOnlyComposable
+    get() = stringResource(id = if (tags.isEmpty()) R.string.tags_empty_title else R.string.tags_added_title)
 
 @Composable
 fun TagManager(
@@ -67,6 +84,19 @@ fun TagManager(
             }
         }
 
+        val imeVisible: Boolean by rememberKeyboardState()
+        var isTagInputFocused: Boolean by remember { mutableStateOf(false) }
+        val bringIntoViewRequester: BringIntoViewRequester = remember { BringIntoViewRequester() }
+
+        LaunchedEffect(imeVisible, isTagInputFocused, suggestedTags, currentTags) {
+            val shouldBringIntoView: Boolean = imeVisible && isTagInputFocused &&
+                (suggestedTags.isNotEmpty() || currentTags.isNotEmpty())
+
+            if (shouldBringIntoView) {
+                bringIntoViewRequester.bringIntoView()
+            }
+        }
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -92,7 +122,10 @@ fun TagManager(
                         }
                         false
                     }
-                    .onFocusChanged { onSearchTagInputFocusChange(it.hasFocus) },
+                    .onFocusChanged {
+                        isTagInputFocused = it.hasFocus
+                        onSearchTagInputFocusChange(it.hasFocus)
+                    },
                 textStyle = MaterialTheme.typography.bodyMedium,
                 label = { Text(text = stringResource(id = R.string.posts_add_tags)) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
@@ -148,6 +181,7 @@ fun TagManager(
                 currentTags.map { tag -> ChipGroup.Item(text = tag.name, icon = closeIcon) }
             },
             onItemClick = {},
+            modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester),
             onItemIconClick = { item -> onRemoveCurrentTagClick(currentTags.first { it.name == item.text }) },
             itemTextStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
         )

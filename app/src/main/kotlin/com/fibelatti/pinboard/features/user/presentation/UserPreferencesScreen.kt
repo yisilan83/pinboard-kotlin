@@ -99,6 +99,7 @@ import com.fibelatti.pinboard.features.sync.PeriodicSync
 import com.fibelatti.pinboard.features.tags.domain.TagManagerState
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import com.fibelatti.pinboard.features.tags.presentation.TagManager
+import com.fibelatti.pinboard.features.tags.presentation.displayTitle
 import com.fibelatti.pinboard.features.user.domain.UserPreferences
 import com.fibelatti.ui.components.ChipGroup
 import com.fibelatti.ui.components.ListItem
@@ -160,20 +161,20 @@ fun UserPreferencesScreen(
     val containerModifier = modifier
         .background(color = ExtendedTheme.colors.backgroundNoOverlay)
         .fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .padding(top = 8.dp, bottom = 32.dp)
         .windowInsetsPadding(
             WindowInsets.safeDrawing
                 .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
         )
+        .verticalScroll(rememberScrollState())
+        .padding(top = 8.dp, bottom = 32.dp)
 
     if (!isAtLeastMediumWidth) {
-        Column(modifier = containerModifier.fillMaxWidth()) {
+        Column(modifier = containerModifier) {
             appPreferences(Modifier)
             bookmarkingPreferences(Modifier.padding(top = 32.dp))
         }
     } else {
-        Row(modifier = containerModifier.fillMaxWidth()) {
+        Row(modifier = containerModifier) {
             appPreferences(Modifier.weight(1f))
             bookmarkingPreferences(Modifier.weight(1f))
         }
@@ -645,7 +646,7 @@ private fun BookmarkingPreferencesContent(
                 onAddTagClick = userPreferencesViewModel::addTag,
                 suggestedTags = tagState.suggestedTags,
                 onSuggestedTagClick = userPreferencesViewModel::addTag,
-                currentTagsTitle = stringResource(id = tagState.displayTitle),
+                currentTagsTitle = tagState.displayTitle,
                 currentTags = tagState.tags,
                 onRemoveCurrentTagClick = userPreferencesViewModel::removeTag,
                 modifier = Modifier.fillWidthOfParent(parentPaddingStart = 16.dp, parentPaddingEnd = 16.dp),

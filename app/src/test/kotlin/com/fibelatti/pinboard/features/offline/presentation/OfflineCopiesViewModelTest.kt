@@ -12,14 +12,12 @@ import com.fibelatti.pinboard.features.appstate.SetOfflineCopies
 import com.fibelatti.pinboard.features.offline.domain.OfflineCopyRepository
 import com.fibelatti.pinboard.features.offline.domain.model.OfflineCopy
 import com.google.common.truth.Truth.assertThat
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -36,7 +34,7 @@ internal class OfflineCopiesViewModelTest : BaseViewModelTest() {
     }
 
     private val offlineCopiesViewModel = OfflineCopiesViewModel(
-        scope = TestScope(dispatcher),
+        dispatcher = dispatcher,
         appStateRepository = mockAppStateRepository,
         offlineCopyRepository = mockOfflineCopyRepository,
     )

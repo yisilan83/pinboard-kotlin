@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -75,6 +74,7 @@ import com.fibelatti.pinboard.features.posts.domain.model.Post
 import com.fibelatti.pinboard.features.tags.domain.TagManagerState
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import com.fibelatti.pinboard.features.tags.presentation.TagManager
+import com.fibelatti.pinboard.features.tags.presentation.displayTitle
 import com.fibelatti.ui.foundation.Shapes
 import com.fibelatti.ui.foundation.rememberKeyboardState
 import com.fibelatti.ui.preview.PreviewAll
@@ -129,7 +129,7 @@ fun EditBookmarkScreen(
         onAddTagClick = editPostViewModel::addTag,
         suggestedTags = tagManagerState.suggestedTags,
         onSuggestedTagClick = editPostViewModel::addTag,
-        currentTagsTitle = stringResource(id = tagManagerState.displayTitle),
+        currentTagsTitle = tagManagerState.displayTitle,
         currentTags = tagManagerState.tags,
         onRemoveCurrentTagClick = editPostViewModel::removeTag,
     )
@@ -161,21 +161,17 @@ private fun LaunchedViewModelEffects(
     }
 
     SideEffect(imeVisible) {
-        if (imeVisible) {
-            mainViewModel.updateState { currentState ->
-                currentState.copy(
-                    actionButton = MainState.ActionButtonComponent.Visible(
-                        contentType = EditPostContent::class,
-                        icon = AppIcons.Save,
-                        label = localResources.getString(R.string.hint_save),
-                    ),
-                )
-            }
+        val actionButton = if (imeVisible) {
+            MainState.ActionButtonComponent.Visible(
+                contentType = EditPostContent::class,
+                icon = AppIcons.Save,
+                label = localResources.getString(R.string.hint_save),
+            )
         } else {
-            mainViewModel.updateState { currentState ->
-                currentState.copy(actionButton = MainState.ActionButtonComponent.Gone)
-            }
+            MainState.ActionButtonComponent.Gone
         }
+
+        mainViewModel.updateState { currentState -> currentState.copy(actionButton = actionButton) }
     }
 
     LaunchedMainViewModelEffect()
@@ -414,12 +410,12 @@ private fun BookmarkContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(scrollState)
             .windowInsetsPadding(
                 WindowInsets.safeDrawing
-                    .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-                    .add(WindowInsets(top = 8.dp, bottom = MainBottomAppBar.ContentClearance)),
-            ),
+                    .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+            )
+            .verticalScroll(scrollState)
+            .padding(top = 8.dp, bottom = MainBottomAppBar.ContentClearance),
     ) {
         if (post.pendingSync != null) {
             PendingSyncIndicator(

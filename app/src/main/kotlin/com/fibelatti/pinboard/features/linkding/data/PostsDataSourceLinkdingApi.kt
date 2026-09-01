@@ -1,12 +1,12 @@
 package com.fibelatti.pinboard.features.linkding.data
 
 import androidx.annotation.VisibleForTesting
-import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.room.RoomRawQuery
 import com.fibelatti.core.extension.ifNullOrBlank
 import com.fibelatti.core.functional.coMapCatching
 import com.fibelatti.core.functional.coRunCatching
+import com.fibelatti.core.platform.ConnectivityInfoProvider
 import com.fibelatti.pinboard.core.AppConfig
-import com.fibelatti.pinboard.core.android.ConnectivityInfoProvider
 import com.fibelatti.pinboard.core.extension.replaceHtmlChars
 import com.fibelatti.pinboard.core.functional.resultFrom
 import com.fibelatti.pinboard.core.network.resultFromNetwork
@@ -22,7 +22,9 @@ import com.fibelatti.pinboard.features.posts.domain.model.PostListResult
 import com.fibelatti.pinboard.features.tags.domain.model.Tag
 import javax.inject.Inject
 import kotlin.concurrent.Volatile
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -44,8 +46,8 @@ internal class PostsDataSourceLinkdingApi @Inject constructor(
     private val connectivityInfoProvider: ConnectivityInfoProvider,
 ) : PostsRepository {
 
-    private var lastGetAllTimeMillis: Long = 0
-    private var lastGetArchivedTimeMillis: Long = 0
+    private var lastGetAll: Instant? = null
+    private var lastGetArchived: Instant? = null
 
     @Volatile
     private var pagedRequestsJob: Job? = null
@@ -260,9 +262,9 @@ internal class PostsDataSourceLinkdingApi @Inject constructor(
             )
         }
 
-        val lastFetchTimeMillis = if (archivedOnly) lastGetArchivedTimeMillis else lastGetAllTimeMillis
+        val lastFetch: Instant? = if (archivedOnly) lastGetArchived else lastGetAll
         val shouldFetchRemote = connectivityInfoProvider.isConnected() &&
-            (System.currentTimeMillis() - lastFetchTimeMillis > 2.minutes.inWholeMilliseconds || forceRefresh)
+            (lastFetch == null || Clock.System.now() - lastFetch > 2.minutes || forceRefresh)
 
         if (shouldFetchRemote) {
             emit(localData(false))
@@ -289,9 +291,9 @@ internal class PostsDataSourceLinkdingApi @Inject constructor(
                 )
 
                 if (archivedOnly) {
-                    lastGetArchivedTimeMillis = System.currentTimeMillis()
+                    lastGetArchived = Clock.System.now()
                 } else {
-                    lastGetAllTimeMillis = System.currentTimeMillis()
+                    lastGetAll = Clock.System.now()
                 }
 
                 getAdditionalPages(archivedOnly = archivedOnly, totalCount = paginatedResponse.count)
@@ -369,7 +371,7 @@ internal class PostsDataSourceLinkdingApi @Inject constructor(
             isFtsCompatible(searchTerm) &&
             (tags.isNullOrEmpty() || tags.all { isFtsCompatible(it.name) })
 
-        val query: SimpleSQLiteQuery = if (isFtsCompatible) {
+        val query: RoomRawQuery = if (isFtsCompatible) {
             BookmarksDao.bookmarksCountFtsQuery(
                 term = searchTerm,
                 tag1 = tags.getTagName(index = 0),
@@ -431,7 +433,7 @@ internal class PostsDataSourceLinkdingApi @Inject constructor(
         val isFtsCompatible: Boolean = matchAll &&
             isFtsCompatible(searchTerm) &&
             (tags.isNullOrEmpty() || tags.all { isFtsCompatible(it.name) })
-        val query: SimpleSQLiteQuery = if (isFtsCompatible) {
+        val query: RoomRawQuery = if (isFtsCompatible) {
             BookmarksDao.allBookmarksFtsQuery(
                 term = searchTerm,
                 tag1 = tags.getTagName(index = 0),
@@ -492,7 +494,7 @@ internal class PostsDataSourceLinkdingApi @Inject constructor(
         val tagNames: List<String> = currentTags.map(Tag::name)
 
         if (tag.isNotEmpty()) {
-            val query: SimpleSQLiteQuery = if (isFtsCompatible) {
+            val query: RoomRawQuery = if (isFtsCompatible) {
                 BookmarksDao.existingBookmarkTagFtsQuery(tag)
             } else {
                 BookmarksDao.existingBookmarkTagNoFtsQuery(tag)
@@ -524,6 +526,6 @@ internal class PostsDataSourceLinkdingApi @Inject constructor(
 
     override suspend fun clearCache(): Result<Unit> = resultFrom {
         linkdingDao.deleteAllBookmarks()
-        lastGetAllTimeMillis = 0
+        lastGetAll = null
     }
 }
