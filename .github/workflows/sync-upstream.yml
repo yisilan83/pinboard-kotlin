@@ -58,18 +58,7 @@ jobs:
           # zh locale
           sed -i 's|localeFilters.addAll(listOf("en", "de", "fr", "es"))|localeFilters.addAll(listOf("en", "de", "fr", "es", "zh"))|' app/build.gradle.kts
           # printReleaseVersionName task (used by signed-build workflow)
-          cat >> app/build.gradle.kts << 'EOF'
-
-/**
- * Prints the current version name. Used for GitHub releases.
- */
-@Suppress("unused")
-val printReleaseVersionName by tasks.registering {
-    doLast {
-        println(AppInfo.versionName)
-    }
-}
-EOF
+          printf '\n\n/**\n * Prints the current version name. Used for GitHub releases.\n */\n@Suppress("unused")\nval printReleaseVersionName by tasks.registering {\n    doLast {\n        println(AppInfo.versionName)\n    }\n}\n' >> app/build.gradle.kts
           git add -A
           git commit -m "Re-apply fork patches: -zh APK name, zh locale, version name task" || echo "Nothing to patch"
 
